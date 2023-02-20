@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 using SharpDX.Windows;
 using SharpDX;
@@ -12,6 +13,9 @@ using D3D11 = SharpDX.Direct3D11;
 using System.Drawing;
 using static SharpDX.Windows.RenderLoop;
 using SharpDX.D3DCompiler;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
+using System.Threading;
 
 namespace ComputerGraphics
 {
@@ -22,6 +26,9 @@ namespace ComputerGraphics
 
         private const int Width = 800;
         private const int Height = 800;
+
+        DateTime _lastCheckTime = DateTime.Now;
+        float _frameCount = 0;
 
         public D3D11.Device d3dDevice;
         public D3D11.DeviceContext d3dDeviceContext;
@@ -40,32 +47,40 @@ namespace ComputerGraphics
         private Viewport viewport;
 
         public List<GameComponent> components = new List<GameComponent>();
-        
+
         public Game()
         {
-            renderForm = new RenderForm("My first SharpDX game");
+            renderForm = new RenderForm("Pong");
+
             InitializeDeviceResources();
         }
         private void Init()
         {
-            //InitializeDeviceResources();
-            foreach (var component in components)
-            {
-                component.Init();
-            }
             InitLayout();
-            
-        }
 
+        }
         public void Run()
         {
             Init();
+            Press();
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
         private void RenderCallback()
         {
+            //GetFps();
+            //Press();
             Draw();
+        }
+
+        private void Press()
+        {
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-0.05f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { components[0].Move(0.05f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) { components[1].Move(-0.05f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(0.05f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Escape) { renderForm.Close(); } };
+
         }
 
         private void InitLayout()
@@ -80,7 +95,7 @@ namespace ComputerGraphics
 
         private void InitializeDeviceResources()
         {
-            //60,1-refresh rate
+            //60,1-refresh rate, BUT IT DOESNT WORK
             ModeDescription backBufferDesc = new ModeDescription(Width, Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
             //descriptor for the swap chain
             SwapChainDescription swapChainDesc = new SwapChainDescription()
@@ -101,15 +116,16 @@ namespace ComputerGraphics
 
             D3D11.Texture2D backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
             renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
+            //set back buffer as current render target view
+            d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
         }
 
         private void Draw()
         {
-            //set back buffer as current render target view
-            d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
+            
 
             //clear the screen
-            d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(1, 100, 1));
+            d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
 
             foreach (var component in components)
             {
@@ -117,6 +133,17 @@ namespace ComputerGraphics
             }
 
             swapChain.Present(1, PresentFlags.None);
+        }
+
+        void GetFps()
+        {
+            _frameCount++;
+            double secondsElapsed = (DateTime.Now - _lastCheckTime).TotalSeconds;
+            float count = _frameCount;
+            _frameCount = 0;
+            double fps = count / secondsElapsed;
+            _lastCheckTime = DateTime.Now;
+            //Console.WriteLine(fps);
         }
 
         public void Dispose()
@@ -130,5 +157,6 @@ namespace ComputerGraphics
             inputSignature.Dispose();
             inputLayout.Dispose();
         }
+
     }
 }
