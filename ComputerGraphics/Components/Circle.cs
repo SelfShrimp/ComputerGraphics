@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ComputerGraphics.Components
 {
@@ -16,54 +17,87 @@ namespace ComputerGraphics.Components
         public Circle(Game game) : base(game)
         {
             getVectors();
-            /*vectors = new Vector4[]
-            {
-                new Vector4(-0.0375f, 0.05f, 0.0f, 0.0f), new Vector4(0.0375f, 0.05f, 0.0f, 0.0f), 
-                new Vector4(-0.0375f, -0.05f, 0.0f, 0.0f), new Vector4(0.0375f, -0.05f, 0.0f, 0.0f), 
-            };*/
-            InitShaders();
+            Init();
         }
 
         private void getVectors()
         {
             speedY = rnd.NextFloat(-0.7f, 0.7f);
-            vectors = new Vector4[30];
+            points = new Vector4[30];
             int n = 10;
             float deltaTheta = (float)(2 * Math.PI / n);
             for (int i = 0; i < n; i++)
             {
                 float theta = i * deltaTheta; // Theta is the angle for that triangle
                 int index = 3 * i;
-                vectors[index + 0] = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-                vectors[index + 1] = new Vector4((float)Math.Cos(theta) / 40, (float)Math.Sin(theta) / 40, 0.0f, 0.0f);
-                vectors[index + 2] = new Vector4((float)Math.Cos(theta + deltaTheta) / 40, (float)Math.Sin(theta + deltaTheta) / 40, 0.0f, 0.0f);
+                points[index + 0] = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+                points[index + 1] = new Vector4((float)Math.Cos(theta) / 40, (float)Math.Sin(theta) / 40, 0.0f, 0.0f);
+                points[index + 2] = new Vector4((float)Math.Cos(theta + deltaTheta) / 40, (float)Math.Sin(theta + deltaTheta) / 40, 0.0f, 0.0f);
             }
+        }
+        public override void Update()
+        {
+            checkTouch();
+            Move();
+            base.Update();
+
         }
 
         public override void Draw()
         {
-            checkTouch();
-            Move();
             base.Draw();
 
         }
 
         private void checkTouch()
         {
-            foreach (var vector in vectors)
+            if ((position.Y >= 1f && speedY > 0.0f) || (position.Y <= -1f && speedY < 0.0f))
+            {
+                speedY *= -1;
+            }
+
+            if (speedX < 0.0f && position.X < game.components[0].points[0].X)
+            {
+                count[1]++;
+                speedX = 0.5f;
+                position = new Vector3();
+                Console.WriteLine(count[0] + ":" + count[1]);
+            }
+            else if (speedX > 0.0f && position.X > game.components[1].points[1].X)
+            {
+                count[0]++;
+                speedX = 0.5f;
+                position = new Vector3();
+                Console.WriteLine(count[0] + ":" + count[1]);
+            }
+
+            if ((speedX < 0.0f && (position.X <= game.components[0].points[1].X && position.X >= game.components[0].points[0].X &&
+            ((position.Y <= game.components[0].points[1].Y && position.Y >= game.components[0].points[3].Y) ||
+            (position.Y <= game.components[0].points[1].Y && position.Y >= game.components[0].points[3].Y)))
+            )
+            ||
+            (speedX > 0.0f && (position.X >= game.components[1].points[0].X && position.X <= game.components[1].points[1].X &&
+            ((position.Y <= game.components[1].points[0].Y && position.Y >= game.components[1].points[2].Y) ||
+            (position.Y <= game.components[1].points[0].Y && position.Y >= game.components[1].points[2].Y))
+            )))
+            {
+                speedY = rnd.NextFloat(-0.7f, 0.7f);
+                speedX *= -1.1f;
+            }
+            /*foreach (var vector in points)
             {
                 if ((vector.Y >= 1.0f && speedY>0.0f) || (vector.Y <= -1.0f && speedY<0.0f))
                 {
                     speedY *= -1;
                 }
 
-                if(speedX < 0.0f && vector.X < game.components[0].vectors[0].X-0.1f){
+                if(speedX < 0.0f && vector.X < game.components[0].points[0].X-0.1f){
                     count[1]++;
                     speedX = 0.5f;
                     getVectors();
                     Console.WriteLine(count[0] + ":" + count[1]);
                     break;
-                } else if (speedX > 0.0f && vector.X > game.components[1].vectors[1].X+0.1f)
+                } else if (speedX > 0.0f && vector.X > game.components[1].points[1].X+0.1f)
                 {
                     count[0]++;
                     speedX = 0.5f;
@@ -72,14 +106,14 @@ namespace ComputerGraphics.Components
                     break;
                 }
 
-                if ((speedX<0.0f && (vector.X <= game.components[0].vectors[1].X && vector.X >= game.components[0].vectors[0].X &&
-                ((vector.Y <= game.components[0].vectors[1].Y && vector.Y >= game.components[0].vectors[3].Y) ||
-                (vector.Y <= game.components[0].vectors[1].Y && vector.Y >= game.components[0].vectors[3].Y)))
+                if ((speedX<0.0f && (vector.X <= game.components[0].points[1].X && vector.X >= game.components[0].points[0].X &&
+                ((vector.Y <= game.components[0].points[1].Y && vector.Y >= game.components[0].points[3].Y) ||
+                (vector.Y <= game.components[0].points[1].Y && vector.Y >= game.components[0].points[3].Y)))
                 )
                 ||
-                (speedX > 0.0f && (vector.X >= game.components[1].vectors[0].X && vector.X <= game.components[1].vectors[1].X &&
-                ((vector.Y <= game.components[1].vectors[0].Y && vector.Y >= game.components[1].vectors[2].Y) ||
-                (vector.Y <= game.components[1].vectors[0].Y && vector.Y >= game.components[1].vectors[2].Y))
+                (speedX > 0.0f && (vector.X >= game.components[1].points[0].X && vector.X <= game.components[1].points[1].X &&
+                ((vector.Y <= game.components[1].points[0].Y && vector.Y >= game.components[1].points[2].Y) ||
+                (vector.Y <= game.components[1].points[0].Y && vector.Y >= game.components[1].points[2].Y))
                 )))
                 {
                     speedY = rnd.NextFloat(-0.7f, 0.7f);
@@ -87,27 +121,18 @@ namespace ComputerGraphics.Components
                 }
 
 
-            }
+            }*/
         }
 
         public override void Move()
         {
-            for (int i = 0; i < vectors.Length; i++)
+            position.X = position.X + game.deltaTime * speedX;
+            position.Y = position.Y + game.deltaTime * speedY;
+            /*for (int i = 0; i < points.Length; i++)
             {
-                vectors[i].X = vectors[i].X + game.deltaTime * speedX;
-                vectors[i].Y = vectors[i].Y + game.deltaTime * speedY;
-            }
-        }
-
-        public override void Update()
-        {
-            base.Update();
-
-        }
-
-        protected override void InitShaders()
-        {
-            base.InitShaders();
+                points[i].X = points[i].X + game.deltaTime * speedX;
+                points[i].Y = points[i].Y + game.deltaTime * speedY;
+            }*/
         }
     }
 }

@@ -9,7 +9,6 @@ using D3D11 = SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
 using System.Windows.Forms;
 using System.Diagnostics;
-using ComputerGraphics.camera;
 using SharpDX.Direct3D11;
 
 namespace ComputerGraphics
@@ -25,7 +24,7 @@ namespace ComputerGraphics
         public float deltaTime;
 
         public D3D11.Device d3dDevice;
-        public D3D11.DeviceContext d3dDeviceContext;
+        public D3D11.DeviceContext d3dContext;
 
         private SwapChain swapChain;
 
@@ -45,7 +44,7 @@ namespace ComputerGraphics
         private Stopwatch _clock;
         private TimeSpan _totalTime;
 
-        public Camera camera;
+        //public Camera camera;
 
         public Game()
         {
@@ -57,7 +56,7 @@ namespace ComputerGraphics
         }
         private void Init()
         {
-            InitLayout();
+         //   InitLayout();
 
         }
         public void Run()
@@ -91,13 +90,13 @@ namespace ComputerGraphics
 
         }
 
-        private void InitLayout()
+        /*private void InitLayout()
         {
             var vertexShaderByteCode = ShaderBytecode.CompileFromFile("shaders.hlsl", "VSmain", "vs_4_0", ShaderFlags.Debug);
             inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
             inputLayout = new D3D11.InputLayout(d3dDevice, inputSignature, inputElements);
             d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
-        }
+        }*/
 
 
 
@@ -117,15 +116,15 @@ namespace ComputerGraphics
             };
             //create device and swap chain
             D3D11.Device.CreateWithSwapChain(DriverType.Hardware, D3D11.DeviceCreationFlags.None, swapChainDesc, out d3dDevice, out swapChain);
-            d3dDeviceContext = d3dDevice.ImmediateContext;
+            d3dContext = d3dDevice.ImmediateContext;
 
             viewport = new Viewport(0, 0, Width, Height);
-            d3dDeviceContext.Rasterizer.SetViewport(viewport);
+            d3dContext.Rasterizer.SetViewport(viewport);
 
             D3D11.Texture2D backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
             renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
             //set back buffer as current render target view
-            d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
+            d3dContext.OutputMerger.SetRenderTargets(renderTargetView);
         }
 
         private void Update()
@@ -138,12 +137,12 @@ namespace ComputerGraphics
             
 
             //clear the screen
-            d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
-            var paddle = new Mesh(d3dDevice, new Vector3(0.1f, 0.2f, 0.1f));
-            /*foreach (var component in components)
+            d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
+            //var paddle = new Mesh(d3dDevice, new Vector3(0.1f, 0.2f, 0.1f));
+            foreach (var component in components)
             {
                 component.Draw();
-            }*/
+            }
 
             swapChain.Present(1, PresentFlags.None);
         }
@@ -154,7 +153,7 @@ namespace ComputerGraphics
             renderTargetView.Dispose();
             swapChain.Dispose();
             d3dDevice.Dispose();
-            d3dDeviceContext.Dispose();
+            d3dContext.Dispose();
             renderForm.Dispose();
             inputLayout.Dispose();
             inputSignature.Dispose();

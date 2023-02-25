@@ -11,55 +11,59 @@ namespace ComputerGraphics
 {
     public class Simple2dFigure : GameComponent
     {
-        public Simple2dFigure(ref Game game, Vector3 position) : base(game)
+        private const float height = 0.4f;
+        private const float width = 0.05f;
+        public Simple2dFigure(ref Game game, Vector4[] vectors) : base(game)
         {
-            this.position = position;
-            //this.vectors = vectors;
-            InitShaders();
+            //this.position = position;
+            //GetPoints();
+            this.points = vectors;
+            Init();
+        }
+
+        public override void Update()
+        {
+            //GetPoints();
+            base.Update();
         }
 
         public override void Draw()
         {
-
+            //GetPoints();
             base.Draw();
             /*game.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>(), 0));
             game.d3dDeviceContext.Draw(vectors.Count(), 0);
             vertexBuffer = D3D11.Buffer.Create<Vector4>(game.d3dDevice, D3D11.BindFlags.VertexBuffer, vectors);*/
         }
 
-        protected override void InitShaders()
+        private void GetPoints()
         {
-            base.InitShaders();
-
-            /*var vertexShaderByteCode = ShaderBytecode.CompileFromFile("shaders.hlsl", "VSmain", "vs_4_0", ShaderFlags.Debug);
-            vertexShader = new D3D11.VertexShader(game.d3dDevice, vertexShaderByteCode);
-
-            var pixelShaderByteCode = ShaderBytecode.CompileFromFile("shaders.hlsl", "PSmain", "ps_4_0", ShaderFlags.Debug);
-            pixelShader = new D3D11.PixelShader(game.d3dDevice, pixelShaderByteCode);
-
-            game.d3dDeviceContext.VertexShader.Set(vertexShader);
-            game.d3dDeviceContext.PixelShader.Set(pixelShader);
-
-            //builds shapes from triangles, must not intersect with the previous parts, else ignore
-            game.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;*/
+            points = new Vector4[]{
+                    new Vector4(position.X, position.Y, 0.0f, 0.0f),
+                    new Vector4(position.X + width, position.Y, 0.0f, 0.0f),
+                    new Vector4(position.X, position.Y - height, 0.0f, 0.0f),
+                    new Vector4(position.X + width, position.Y - height, 0.0f, 0.0f)
+            };
         }
 
         public override void Move(float pos)
         {
             //foreach only read:(
 
-            if (pos > 0 && vectors[0].Y < 1f)
+            if (pos > 0 && points[0].Y < 1f)
             {
-                for (int i = 0; i < vectors.Length; i++)
+                position.Y = position.Y + game.deltaTime * pos;
+                for (int i = 0; i < points.Length; i++)
                 {
-                    vectors[i].Y = vectors[i].Y + game.deltaTime * pos;
+                    points[i].Y = points[i].Y + game.deltaTime * pos;
                 }
             }
-            else if (pos < 0 && vectors[3].Y > -1f)
+            else if (pos < 0 && points[3].Y > -1f)
             {
-                for (int i = 0; i < vectors.Length; i++)
+                position.Y= position.Y + game.deltaTime * pos;
+                for (int i = 0; i < points.Length; i++)
                 {
-                    vectors[i].Y = vectors[i].Y + game.deltaTime * pos;
+                    points[i].Y = points[i].Y + game.deltaTime * pos;
                 }
             }
 
