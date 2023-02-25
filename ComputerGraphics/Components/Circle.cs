@@ -9,8 +9,8 @@ namespace ComputerGraphics.Components
 {
     internal class Circle : GameComponent
     {
-        float speedX = 0.005f;
-        float speedY = 0.005f;
+        float speedX = 0.5f;
+        float speedY = 0.5f;
         private int[] count= new int[] {0,0};
         private Random rnd = new Random();
         public Circle(Game game) : base(game)
@@ -26,7 +26,7 @@ namespace ComputerGraphics.Components
 
         private void getVectors()
         {
-            speedY = rnd.NextFloat(-0.007f, 0.007f);
+            speedY = rnd.NextFloat(-0.7f, 0.7f);
             vectors = new Vector4[30];
             int n = 10;
             float deltaTheta = (float)(2 * Math.PI / n);
@@ -59,14 +59,14 @@ namespace ComputerGraphics.Components
 
                 if(speedX < 0.0f && vector.X < game.components[0].vectors[0].X-0.1f){
                     count[1]++;
-                    speedX = 0.005f;
+                    speedX = 0.5f;
                     getVectors();
                     Console.WriteLine(count[0] + ":" + count[1]);
                     break;
                 } else if (speedX > 0.0f && vector.X > game.components[1].vectors[1].X+0.1f)
                 {
                     count[0]++;
-                    speedX = 0.005f;
+                    speedX = 0.5f;
                     getVectors();
                     Console.WriteLine(count[0] + ":" + count[1]);
                     break;
@@ -82,7 +82,7 @@ namespace ComputerGraphics.Components
                 (vector.Y <= game.components[1].vectors[0].Y && vector.Y >= game.components[1].vectors[2].Y))
                 )))
                 {
-                    speedY = rnd.NextFloat(-0.007f, 0.007f);
+                    speedY = rnd.NextFloat(-0.7f, 0.7f);
                     speedX *= -1.1f;
                 }
 
@@ -94,9 +94,15 @@ namespace ComputerGraphics.Components
         {
             for (int i = 0; i < vectors.Length; i++)
             {
-                vectors[i].X += speedX;
-                vectors[i].Y += speedY;
+                vectors[i].X = vectors[i].X + game.deltaTime * speedX;
+                vectors[i].Y = vectors[i].Y + game.deltaTime * speedY;
             }
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
         }
 
         protected override void InitShaders()

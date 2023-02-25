@@ -3,7 +3,12 @@
    return position;
 }
 
+cbuffer cBuf 
+{
+	matrix transform
+}
+
 float4 PSmain(float4 position : SV_POSITION) : SV_TARGET
 {
-   return float4(1.0, 1.0, 1.0, 1.0);
+   return mul(float4(1.0, 1.0, 1.0, 1.0), transform);
 }

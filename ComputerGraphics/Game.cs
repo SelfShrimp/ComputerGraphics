@@ -1,21 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 using SharpDX.Windows;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D;
 using D3D11 = SharpDX.Direct3D11;
-using System.Drawing;
-using static SharpDX.Windows.RenderLoop;
 using SharpDX.D3DCompiler;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
-using System.Threading;
+using System.Diagnostics;
+using ComputerGraphics.camera;
+using SharpDX.Direct3D11;
 
 namespace ComputerGraphics
 {
@@ -24,11 +19,10 @@ namespace ComputerGraphics
     {
         private RenderForm renderForm;
 
-        private const int Width = 800;
-        private const int Height = 800;
+        public int Width = 800;
+        public int Height = 800;
 
-        DateTime _lastCheckTime = DateTime.Now;
-        float _frameCount = 0;
+        public float deltaTime;
 
         public D3D11.Device d3dDevice;
         public D3D11.DeviceContext d3dDeviceContext;
@@ -47,10 +41,17 @@ namespace ComputerGraphics
         private Viewport viewport;
 
         public List<GameComponent> components = new List<GameComponent>();
+        
+        private Stopwatch _clock;
+        private TimeSpan _totalTime;
+
+        public Camera camera;
 
         public Game()
         {
             renderForm = new RenderForm("Pong");
+            renderForm.Width = Width;
+            renderForm.Height = Height;
 
             InitializeDeviceResources();
         }
@@ -63,22 +64,29 @@ namespace ComputerGraphics
         {
             Init();
             Press();
+            //camera = new Camera(this);
+            _clock = new Stopwatch();
+            _clock.Start();
+            _totalTime = _clock.Elapsed;
+
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
         private void RenderCallback()
         {
-            //GetFps();
-            //Press();
+            var curTime = _clock.Elapsed;
+            deltaTime = (float)(curTime - _totalTime).TotalSeconds;
+            _totalTime = curTime;
+            Update();
             Draw();
         }
 
         private void Press()
         {
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-0.05f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { components[0].Move(0.05f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) { components[1].Move(-0.05f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(0.05f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-2f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { components[0].Move(2f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) { components[1].Move(-2f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(2f); } };
             renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Escape) { renderForm.Close(); } };
 
         }
@@ -120,34 +128,29 @@ namespace ComputerGraphics
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
         }
 
+        private void Update()
+        {
+            components.ForEach(component => { component.Update(); });
+        }
+
         private void Draw()
         {
             
 
             //clear the screen
             d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
-
-            foreach (var component in components)
+            var paddle = new Mesh(d3dDevice, new Vector3(0.1f, 0.2f, 0.1f));
+            /*foreach (var component in components)
             {
                 component.Draw();
-            }
+            }*/
 
             swapChain.Present(1, PresentFlags.None);
         }
 
-        void GetFps()
-        {
-            _frameCount++;
-            double secondsElapsed = (DateTime.Now - _lastCheckTime).TotalSeconds;
-            float count = _frameCount;
-            _frameCount = 0;
-            double fps = count / secondsElapsed;
-            _lastCheckTime = DateTime.Now;
-            //Console.WriteLine(fps);
-        }
-
         public void Dispose()
         {
+            components.ForEach(component => { component.Dispose();});
             renderTargetView.Dispose();
             swapChain.Dispose();
             d3dDevice.Dispose();

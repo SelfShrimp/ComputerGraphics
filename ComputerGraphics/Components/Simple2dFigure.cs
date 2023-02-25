@@ -11,14 +11,16 @@ namespace ComputerGraphics
 {
     public class Simple2dFigure : GameComponent
     {
-        public Simple2dFigure (Game game, Vector4[] vectors) : base(game)
+        public Simple2dFigure(ref Game game, Vector3 position) : base(game)
         {
-            this.vectors = vectors;
+            this.position = position;
+            //this.vectors = vectors;
             InitShaders();
         }
 
         public override void Draw()
         {
+
             base.Draw();
             /*game.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>(), 0));
             game.d3dDeviceContext.Draw(vectors.Count(), 0);
@@ -45,22 +47,22 @@ namespace ComputerGraphics
         public override void Move(float pos)
         {
             //foreach only read:(
-            
-                if(pos>0 && vectors[0].Y < 1f)
-                {
+
+            if (pos > 0 && vectors[0].Y < 1f)
+            {
                 for (int i = 0; i < vectors.Length; i++)
                 {
-                    vectors[i].Y += pos;
+                    vectors[i].Y = vectors[i].Y + game.deltaTime * pos;
                 }
-                }
-                else if(pos < 0 && vectors[3].Y > -1f)
-                {
+            }
+            else if (pos < 0 && vectors[3].Y > -1f)
+            {
                 for (int i = 0; i < vectors.Length; i++)
                 {
-                    vectors[i].Y += pos;
+                    vectors[i].Y = vectors[i].Y + game.deltaTime * pos;
                 }
-                }
-            
+            }
+
         }
     }
 }

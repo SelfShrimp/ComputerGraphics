@@ -12,7 +12,7 @@ namespace ComputerGraphics
         static void Main(string[] args)
         {
             Game game = new Game();
-            GameComponent triangle1 = new Simple2dFigure(game, new Vector4[] {
+            /*GameComponent triangle1 = new Simple2dFigure(game, new Vector4[] {
                 new Vector4(-0.9f, 0.2f, 0.0f, 0.0f), new Vector4(-0.85f, 0.2f, 0.0f, 0.0f),
                 new Vector4(-0.9f, -0.2f, 0.0f, 0.0f), new Vector4(-0.85f, -0.2f, 0.0f, 0.0f),
             }
@@ -20,9 +20,10 @@ namespace ComputerGraphics
             GameComponent triangle2 = new Simple2dFigure(game, new Vector4[] {
                 new Vector4(0.85f, 0.2f, 0.0f, 0.0f), new Vector4(0.9f, 0.2f, 0.0f, 0.0f),
                 new Vector4(0.85f, -0.2f, 0.0f, 0.0f), new Vector4(0.9f, -0.2f, 0.0f, 0.0f),
-
             }
-                );
+                );*/
+            GameComponent triangle1 = new Simple2dFigure(ref game, new Vector3(-0.865f, 0,0));
+            GameComponent triangle2 = new Simple2dFigure(ref game, new Vector3(-0.865f, 0, 0));
             GameComponent circle = new Circle(game);
             game.components.Add(triangle1);
             game.components.Add(triangle2);
