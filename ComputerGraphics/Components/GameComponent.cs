@@ -40,13 +40,13 @@ namespace ComputerGraphics
             worldViewProj.M32 = +10f;
             worldViewProj.M31 = +10f;
             worldViewProj.M11 = +10f;*/
-            Random rnd = new Random();
+            //Random rnd = new Random();
             /*position.Y = rnd.NextFloat(-1, 1);
             position.X = rnd.NextFloat(-1, 1);*/
-            var matrix = Matrix.Translation(position);
+            //var matrix = Matrix.Translation(position);
             //position.X  = position.Y;
             //Matrix matrix = Matrix.Translation(0,0,0);
-            //Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(0) * Matrix.RotationZ(0) * Matrix.Translation(position) * 1;
+            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(0) * Matrix.RotationZ(0) * Matrix.Translation(position) * 1;
             game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
         }
 
