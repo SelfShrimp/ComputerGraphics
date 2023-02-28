@@ -10,6 +10,7 @@ using SharpDX.D3DCompiler;
 using System.Windows.Forms;
 using System.Diagnostics;
 using SharpDX.Direct3D11;
+using ComputerGraphics.camera;
 
 namespace ComputerGraphics
 {
@@ -18,8 +19,8 @@ namespace ComputerGraphics
     {
         private RenderForm renderForm;
 
-        public int Width = 800;
-        public int Height = 800;
+        public int width = 800;
+        public int height = 800;
 
         public float deltaTime;
 
@@ -44,13 +45,13 @@ namespace ComputerGraphics
         private Stopwatch _clock;
         private TimeSpan _totalTime;
 
-        //public Camera camera;
+        public Camera camera;
 
         public Game()
         {
             renderForm = new RenderForm("Pong");
-            renderForm.Width = Width;
-            renderForm.Height = Height;
+            renderForm.Width = width;
+            renderForm.Height = height;
 
             InitializeDeviceResources();
         }
@@ -63,7 +64,9 @@ namespace ComputerGraphics
         {
             Init();
             Press();
-            //camera = new Camera(this);
+            camera = new Camera();
+
+
             _clock = new Stopwatch();
             _clock.Start();
             _totalTime = _clock.Elapsed;
@@ -82,10 +85,11 @@ namespace ComputerGraphics
 
         private void Press()
         {
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-2f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { camera.position.Y-=1f; camera.target.Y -= 1f; } };
+            /*renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-2f); } };
             renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { components[0].Move(2f); } };
             renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) { components[1].Move(-2f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(2f); } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(2f); } };*/
             renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Escape) { renderForm.Close(); } };
 
         }
@@ -103,7 +107,7 @@ namespace ComputerGraphics
         private void InitializeDeviceResources()
         {
             //60,1-refresh rate, BUT IT DOESNT WORK
-            ModeDescription backBufferDesc = new ModeDescription(Width, Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
+            ModeDescription backBufferDesc = new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
             //descriptor for the swap chain
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
@@ -118,7 +122,7 @@ namespace ComputerGraphics
             D3D11.Device.CreateWithSwapChain(DriverType.Hardware, D3D11.DeviceCreationFlags.None, swapChainDesc, out d3dDevice, out swapChain);
             d3dContext = d3dDevice.ImmediateContext;
 
-            viewport = new Viewport(0, 0, Width, Height);
+            viewport = new Viewport(0, 0, width, height);
             d3dContext.Rasterizer.SetViewport(viewport);
 
             D3D11.Texture2D backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
@@ -129,6 +133,7 @@ namespace ComputerGraphics
 
         private void Update()
         {
+            camera.Update();
             components.ForEach(component => { component.Update(); });
         }
 

@@ -46,7 +46,7 @@ namespace ComputerGraphics
             //var matrix = Matrix.Translation(position);
             //position.X  = position.Y;
             //Matrix matrix = Matrix.Translation(0,0,0);
-            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(0) * Matrix.RotationZ(0) * Matrix.Translation(position) * 1;
+            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(0) * Matrix.RotationZ(0) * Matrix.Translation(position) * game.camera.viewProjectionMatrix;
             game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
         }
 
