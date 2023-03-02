@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿/*
+using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -121,7 +122,7 @@ namespace ComputerGraphics.Components
                 }
 
 
-            }*/
+            }#1#
         }
 
         public override void Move()
@@ -132,7 +133,8 @@ namespace ComputerGraphics.Components
             {
                 points[i].X = points[i].X + game.deltaTime * speedX;
                 points[i].Y = points[i].Y + game.deltaTime * speedY;
-            }*/
+            }#1#
         }
     }
 }
+*/

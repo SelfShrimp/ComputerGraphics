@@ -1,14 +1,25 @@
-﻿float4 VSmain(float4 position : POSITION) : SV_POSITION
+﻿struct my_struct
 {
-   return position;
+   float4 position : SV_POSITION;
+   float4 v : POS;
+   
+};
+
+cbuffer cBuf
+{
+   matrix transform;
+};
+
+my_struct VSmain(float4 position : POSITION)
+{
+   my_struct res = (my_struct) 0;
+   res.position = mul(transform, position);
+   res.v = position;
+   return res;
+   //return position;
 }
 
-cbuffer cBuf 
+float4 PSmain(my_struct res) : SV_TARGET
 {
-	matrix transform
-}
-
-float4 PSmain(float4 position : SV_POSITION) : SV_TARGET
-{
-   return mul(float4(1.0, 1.0, 1.0, 1.0), transform);
+   return float4(res.v.x/2.0+0.5, res.v.y/2.0+0.5, res.v.z/2.0+0.5, 1.0);
 }

@@ -1,4 +1,5 @@
 ﻿
+/*
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
@@ -33,7 +34,7 @@ namespace ComputerGraphics
             base.Draw();
             /*game.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>(), 0));
             game.d3dDeviceContext.Draw(vectors.Count(), 0);
-            vertexBuffer = D3D11.Buffer.Create<Vector4>(game.d3dDevice, D3D11.BindFlags.VertexBuffer, vectors);*/
+            vertexBuffer = D3D11.Buffer.Create<Vector4>(game.d3dDevice, D3D11.BindFlags.VertexBuffer, vectors);#1#
         }
 
         private void GetPoints()
@@ -70,3 +71,4 @@ namespace ComputerGraphics
         }
     }
 }
+*/

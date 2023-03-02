@@ -8,7 +8,7 @@ namespace ComputerGraphics.camera
     {
         public Vector3 position = new Vector3(0, 0, -3);
         public Vector3 target = new Vector3(0, 0, 0);
-        public Vector3 up = new Vector3(0, -1, 0); //dont understand, X rotate, but another?
+        public Vector3 up = new Vector3(0, 1, 0); //dont understand, X rotate, Y mirror, Z ?
         public float nearPlane = 0.1f;
         public float farPlane = 1000f;
         public Matrix viewMatrix;

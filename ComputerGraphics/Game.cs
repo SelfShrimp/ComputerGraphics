@@ -9,6 +9,7 @@ using D3D11 = SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Windows.Input;
 using SharpDX.Direct3D11;
 using ComputerGraphics.camera;
 
@@ -49,7 +50,7 @@ namespace ComputerGraphics
 
         public Game()
         {
-            renderForm = new RenderForm("Pong");
+            renderForm = new RenderForm("Galaxy");
             renderForm.Width = width;
             renderForm.Height = height;
 
@@ -85,11 +86,14 @@ namespace ComputerGraphics
 
         private void Press()
         {
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { camera.position.Y-=1f; camera.target.Y -= 1f; } };
-            /*renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { components[0].Move(-2f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { components[0].Move(2f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) { components[1].Move(-2f); } };
-            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { components[1].Move(2f); } };*/
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.S) { camera.position.Z-=0.5f; camera.target.Z -= 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.W) { camera.position.Z+=0.5f; camera.target.Z += 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.D) { camera.position.X+=0.5f; camera.target.X += 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.A) { camera.position.X-=0.5f; camera.target.X -= 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Up) { camera.target.Y -= 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Down) {camera.target.Y += 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Right) { camera.target.X += 0.5f; } };
+            renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Left) { camera.target.X -= 0.5f; } };
             renderForm.KeyDown += (sender, args) => { if (args.KeyCode == Keys.Escape) { renderForm.Close(); } };
 
         }

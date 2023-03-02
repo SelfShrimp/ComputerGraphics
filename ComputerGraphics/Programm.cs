@@ -1,4 +1,5 @@
 ﻿
+using System;
 using ComputerGraphics.Components;
 using SharpDX;
 using System.Collections.Generic;
@@ -9,25 +10,30 @@ namespace ComputerGraphics
 {
     internal class Programm
     {
+        [STAThread]
         static void Main(string[] args)
         {
             Game game = new Game();
-            GameComponent triangle1 = new Simple2dFigure(ref game, new Vector4[] {
-                new Vector4(-0.9f, 0.2f, 0.0f, 0.0f), new Vector4(-0.85f, 0.2f, 0.0f, 0.0f),
-                new Vector4(-0.9f, -0.2f, 0.0f, 0.0f), new Vector4(-0.85f, -0.2f, 0.0f, 0.0f),
-            }
-                );
-            GameComponent triangle2 = new Simple2dFigure(ref game, new Vector4[] {
-                new Vector4(0.85f, 0.2f, 0.0f, 0.0f), new Vector4(0.9f, 0.2f, 0.0f, 0.0f),
-                new Vector4(0.85f, -0.2f, 0.0f, 0.0f), new Vector4(0.9f, -0.2f, 0.0f, 0.0f),
-            }
-                );
-            /*GameComponent triangle1 = new Simple2dFigure(ref game, new Vector3(-0.4f, 0.1f, 0));
-            GameComponent triangle2 = new Simple2dFigure(ref game, new Vector3(0.4f, 0.1f, 0));*/
-            GameComponent circle = new Circle(game);
-            game.components.Add(triangle1);
-            game.components.Add(triangle2);
-            game.components.Add(circle);
+            Sphere sun = new Sphere(game,5f);
+            Sphere mercury = new Sphere(game,0.5f);
+            mercury.position.X = 10f;
+            Sphere venus = new Sphere(game,1f);
+            
+            Sphere earth = new Sphere(game,1f);
+            Sphere mars = new Sphere(game,1f);
+            Sphere jupiter = new Sphere(game,1f);
+            Sphere saturn = new Sphere(game,1f);
+            Sphere uranus = new Sphere(game,1f);
+            Sphere neptune = new Sphere(game,1f);
+            game.components.Add(sun);
+            game.components.Add(mercury);
+            game.components.Add(venus);
+            game.components.Add(earth);
+            game.components.Add(mars);
+            game.components.Add(jupiter);
+            game.components.Add(saturn);
+            game.components.Add(uranus);
+            game.components.Add(neptune);
             game.Run();
         }
     }
