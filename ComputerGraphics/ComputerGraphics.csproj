@@ -83,7 +83,9 @@
   <ItemGroup>
     <Compile Include="camera\Camera.cs" />
     <Compile Include="Components\Circle.cs" />
+    <Compile Include="Components\ObjData.cs" />
     <Compile Include="Components\Sphere.cs" />
+    <Compile Include="Components\test.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Components\GameComponent.cs" />
     <Compile Include="MyMesh.cs" />
@@ -96,6 +98,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="assets\Ball_obj.obj" />
+    <Content Include="assets\wooden_sphere.obj" />
     <Content Include="hlsl\shaders.hlsl" />
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +114,8 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="anotherFolder" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

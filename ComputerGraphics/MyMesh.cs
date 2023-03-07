@@ -22,7 +22,7 @@ namespace ComputerGraphics
     public struct VertexColor
     {
         public Vector4 point;
-        public Color4 color;
+        public Color4 color = Color4.White;
         
         public VertexColor(Vector4 position, Color4 color)
         {

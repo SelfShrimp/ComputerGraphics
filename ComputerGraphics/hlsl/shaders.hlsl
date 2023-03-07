@@ -38,6 +38,7 @@ VS_OUT VSmain(float4 position : POSITION, float4 color : COLOR)
 }*/
 float4 PSmain(VS_OUT input) : SV_TARGET
 {
+   return float4(1,1,1,1);
    //return float4(position.x/2.0+0.5, position.y/2.0+0.5, position.z/2.0+0.5, 1.0);
    /*if(input.col.w>1)
    {
