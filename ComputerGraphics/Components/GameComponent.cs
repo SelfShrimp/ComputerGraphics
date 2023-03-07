@@ -17,19 +17,24 @@ namespace ComputerGraphics
     {
         protected D3D11.Buffer vertexBuffer;
         protected D3D11.Buffer indexBuffer;
+        public D3D11.Buffer constBuffer;
         protected CompilationResult vertexShaderByteCode;
         protected D3D11.VertexShader vertexShader;
         protected D3D11.PixelShader pixelShader;
         protected InputLayout layout;
         protected Game game;
-        public List<Vector4> points = new List<Vector4>();
+        public List<VertexColor> points = new List<VertexColor>();
         public List<int> indices = new List<int>();
 
         private RasterizerState rasterizerState;
         //public MyMesh meshes;
 
         public Vector3 position;
-        public D3D11.Buffer constBuffer;
+        protected float rotateY = 0f;
+        protected float speedRotateY = 0f;
+        protected float speed = 0f;
+        //protected float speedZ = 0f;
+        
 
 
         public GameComponent(Game game)
@@ -40,7 +45,8 @@ namespace ComputerGraphics
 
         public virtual void Update()
         {
-            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(0) * Matrix.RotationZ(0) * Matrix.Translation(position) * game.camera.viewProjectionMatrix;
+            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(rotateY) * Matrix.RotationZ(0) * 
+                            Matrix.Translation(position) * game.camera.viewProjectionMatrix;
             //Matrix matrix = Matrix.Identity;
             //matrix.M34 = -1;
             game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
@@ -73,7 +79,8 @@ namespace ComputerGraphics
                 ShaderSignature.GetInputSignature(vertexShaderByteCode),
                 new D3D11.InputElement[]
                 {
-                    new D3D11.InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0)
+                    new D3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0, D3D11.InputClassification.PerVertexData, 0),
+                    new D3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, D3D11.InputClassification.PerVertexData, 0)
                 }
             );
         }
@@ -114,15 +121,15 @@ namespace ComputerGraphics
         {
             game.d3dContext.InputAssembler.InputLayout = layout;
             game.d3dContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            game.d3dContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>(), 0));
+            game.d3dContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexColor>(), 0));
             game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);
             game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
-
+            
             game.d3dContext.VertexShader.Set(vertexShader);
             game.d3dContext.PixelShader.Set(pixelShader);
-
+            
             game.d3dDevice.ImmediateContext.Rasterizer.State = rasterizerState;
-
+            
         }
 
         public void Dispose()
