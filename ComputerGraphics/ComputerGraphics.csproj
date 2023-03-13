@@ -119,7 +119,6 @@
     <Compile Include="Components\Circle.cs" />
     <Compile Include="Components\ObjData.cs" />
     <Compile Include="Components\Sphere.cs" />
-    <Compile Include="Components\test.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Components\GameComponent.cs" />
     <Compile Include="MyMesh.cs" />
