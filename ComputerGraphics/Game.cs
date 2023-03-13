@@ -28,7 +28,6 @@ namespace ComputerGraphics
 
         private D3D11.RenderTargetView renderTargetView;
         private D3D11.DepthStencilView depthStencilView;
-
         private Viewport viewport;
 
         public List<GameComponent> components = new List<GameComponent>();
@@ -38,10 +37,11 @@ namespace ComputerGraphics
 
         public Camera camera;
         private bool bindCamera = false;
+        DataStream stream;
 
         public Game()
         {
-            renderForm = new RenderForm("Galaxy");
+            renderForm = new RenderForm("Katamari");
             renderForm.Width = width;
             renderForm.Height = height;
 
@@ -69,6 +69,12 @@ namespace ComputerGraphics
             Draw();
         }
 
+        
+        Vector3 ballVelocity = Vector3.Zero;
+        Vector3 ballAcceleration = Vector3.Zero;
+        Vector3 ballRotation = Vector3.Zero;
+        Vector3 ballAngularVelocity = Vector3.Zero;
+        Vector3 ballAngularAcceleration = Vector3.Zero;
         private void Press()
         {
             if (Keyboard.IsKeyDown(Key.NumPad0))
@@ -123,38 +129,73 @@ namespace ComputerGraphics
 
                 if (Keyboard.IsKeyDown(Key.W))
                 {
-                    Vector3 direction = camera.target - camera.position;
-                    direction.Normalize();
-                    Vector3 velocity = direction * 0.5f;
-                    camera.position += velocity;
+                    /*Vector3 direction = camera.target - camera.position;
+                    direction.Normalize();*/
+                    //Vector3 velocity = direction * 0.5f;
+                    Vector3 velocity = new Vector3(0,0,0.1f);
+                    components[1].position += velocity;
+                    components[1].rotateX += 0.1f;
+                    foreach (var gameComponent in components[1].gameComponents)
+                    {
+                        gameComponent.position += velocity;
+                        var a = Vector3.Transform(gameComponent.position - components[1].position, Matrix.RotationX(0.1f )) ;
+                        gameComponent.position = new Vector3(a.X, a.Y, a.Z)+ components[1].position;
+                        
+                    }
+                    camera.position = components[1].position + new Vector3(0,15,-15);
                     camera.target += velocity;
+                    
                 }
 
                 if (Keyboard.IsKeyDown(Key.A))
                 {
-                    Vector3 direction = camera.target - camera.position;
-                    direction.Normalize();
-                    Vector3 velocity = Vector3.Cross(direction, Vector3.Up) * 0.5f;
-                    camera.position += velocity;
-                    camera.target += velocity;
+                    /*Vector3 direction = camera.target - camera.position;
+                    direction.Normalize();*/
+                    //Vector3 velocity = Vector3.Cross(direction, Vector3.Up) * 0.5f;
+                    Vector3 velocity = new Vector3(0.1f,0,0f);
+                    components[1].position -= velocity;
+                    foreach (var gameComponent in components[1].gameComponents)
+                    {
+                        gameComponent.position -= velocity;
+                        var a = Vector3.Transform(gameComponent.position - components[1].position, Matrix.RotationZ(0.1f )) ;
+                        gameComponent.position = new Vector3(a.X, a.Y, a.Z)+ components[1].position;
+                    }
+                    camera.position = components[1].position + new Vector3(0,15,-15);;
+                    camera.target -= velocity;
                 }
 
                 if (Keyboard.IsKeyDown(Key.S))
                 {
-                    Vector3 direction = camera.target - camera.position;
-                    direction.Normalize();
-                    Vector3 velocity = direction * 0.5f;
-                    camera.position -= velocity;
+                    /*Vector3 direction = camera.target - camera.position;
+                    direction.Normalize();*/
+                    //Vector3 velocity = direction * 0.5f;
+                    Vector3 velocity = new Vector3(0,0,0.1f);
+                    components[1].position -= velocity;
+                    foreach (var gameComponent in components[1].gameComponents)
+                    {
+                        gameComponent.position -= velocity;
+                        var a = Vector3.Transform(gameComponent.position - + components[1].position, Matrix.RotationX(-0.1f )) ;
+                        gameComponent.position = new Vector3(a.X, a.Y, a.Z)+ components[1].position;
+                    }
+                    camera.position = components[1].position + new Vector3(0,15,-15);;
                     camera.target -= velocity;
                 }
 
                 if (Keyboard.IsKeyDown(Key.D))
                 {
-                    Vector3 direction = camera.target - camera.position;
-                    direction.Normalize();
-                    Vector3 velocity = Vector3.Cross(direction, Vector3.Up) * 0.5f;
-                    camera.position -= velocity;
-                    camera.target -= velocity;
+                    /*Vector3 direction = camera.target - camera.position;
+                    direction.Normalize();*/
+                    //Vector3 velocity = Vector3.Cross(direction, Vector3.Up) * 0.5f;
+                    Vector3 velocity = new Vector3(0.1f,0,0f);
+                    components[1].position += velocity;
+                    foreach (var gameComponent in components[1].gameComponents)
+                    {
+                        gameComponent.position += velocity;
+                        var a = Vector3.Transform(gameComponent.position - + components[1].position, Matrix.RotationZ(-0.1f )) ;
+                        gameComponent.position = new Vector3(a.X, a.Y, a.Z)+ components[1].position;
+                    }
+                    camera.position = components[1].position + new Vector3(0,15,-15);;
+                    camera.target += velocity;
                 }
 
                 if (Keyboard.IsKeyDown(Key.Q))
@@ -225,8 +266,8 @@ namespace ComputerGraphics
             D3D11.Texture2D backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
             renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
             //set back buffer as current render target view
-            d3dContext.OutputMerger.SetRenderTargets(renderTargetView);
-            d3dContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
+            //d3dContext.OutputMerger.SetRenderTargets(renderTargetView);
+            
         }
 
         private void Update()
@@ -239,19 +280,46 @@ namespace ComputerGraphics
             }
 
             camera.Update();
+            try
+            {
+                List<int> indecesForDelete = new List<int>();
+                for (int i = 2; i < components.Count; i++)
+                {
+                    if (components[1].boundingSphere.Intersects(components[i].boundingSphere) &&
+                        components[1].boundingSphere.Radius > components[i].boundingSphere.Radius)
+                    {
+                        /*var distance = components[1].position - components[i].position;
+                        components[i].positionStock = distance;*/
+                        components[1].gameComponents.Add(components[i]);
+                        components[1].radius += components[i].radius;
+                        indecesForDelete.Add(i);
+                    }
+                }
+                indecesForDelete.Sort();
+                for (int i = indecesForDelete.Count - 1; i >= 0; i--)
+                {
+                    components.RemoveAt(indecesForDelete[i]);
+                }
+            }
+            catch (Exception e)
+            {
+            }
             components.ForEach(component => { component.Update(); });
         }
 
         private void Draw()
         {
+            d3dContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
             //clear the screen
             d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
 
             d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
-            
+            //d3dContext.UnmapSubresource(renderTargetView, 0);
             foreach (var component in components)
             {
+                //d3dContext.MapSubresource(component.texture, 0, MapMode.WriteDiscard, D3D11.MapFlags.None, out stream);
                 component.Draw();
+                //d3dContext.UnmapSubresource(component.texture, 0);
             }
 
 

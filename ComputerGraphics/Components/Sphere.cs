@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using SharpDX;
@@ -34,7 +34,7 @@ namespace ComputerGraphics.Components
             indices = new List<int>()
             {
                 0,2,1
-            };*/
+            };#1#
             for (int i = 0; i <= stacks; i++)
             {
                 float phi = i * phiStep;
@@ -113,7 +113,7 @@ namespace ComputerGraphics.Components
             /*if (position.X == 0f)
             {
                 speedZ *= -1;
-            }*/
+            }#1#
 
             if (position.Z == 0f)
             {
@@ -121,7 +121,7 @@ namespace ComputerGraphics.Components
                 /*if (speedX < 0)
                     speedX -= 0.1f;
                 else
-                    speedX += 0.1f;*/
+                    speedX += 0.1f;#1#
             }
 
             /*if (Math.Abs(position.X) == Math.Abs(position.Z))
@@ -130,9 +130,9 @@ namespace ComputerGraphics.Components
                     speedX += 0.1f;
                 else
                     speedX -= 0.1f;
-            }*/
+            }#1#
             /*position.X = (float)Math.Round(position.X+speedX,2);
-            position.Z = (float)Math.Round(position.Z + speedZ,2);*/
+            position.Z = (float)Math.Round(position.Z + speedZ,2);#1#
             //Matrix position = new Vector3(radius * Math.Cos(angle), 0, radius * Math.Sin(angle));
 
             if (!moon)
@@ -204,6 +204,6 @@ namespace ComputerGraphics.Components
                 number += 1;
             }
             sphereMesh.indices = tempIndice;
-        }*/
+        }#1#
     }
-}
+}*/

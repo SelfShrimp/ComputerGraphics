@@ -6,9 +6,6 @@ using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
-using static System.Windows.Forms.AxHost;
 using D3D11 = SharpDX.Direct3D11;
 
 namespace ComputerGraphics
@@ -23,39 +20,61 @@ namespace ComputerGraphics
         protected D3D11.PixelShader pixelShader;
         protected InputLayout layout;
         protected Game game;
-        public List<VertexColor> points = new List<VertexColor>();
+
+        //protected ObjModel objectModel = new ObjModel();
+        public List<MyVertex> points = new List<MyVertex>();
         public List<int> indices = new List<int>();
 
         private RasterizerState rasterizerState;
         //public MyMesh meshes;
 
         public Vector3 position;
-        protected float rotateY = 0f;
+        public Vector3 positionStock;
+        public float rotateX = 0f;
+        public float rotateY = 0f;
+        public float rotateZ = 0f;
         protected float speedRotateY = 0f;
         protected float speed = 0f;
-        //protected float speedZ = 0f;
-        
 
+        public float scale = 1f;
+        //protected float speedZ = 0f;
+
+        protected ShaderResourceView shaderResourceView;
+        public Texture2D texture;
+        private SamplerState sampler;
+
+        public BoundingSphere boundingSphere;
+        public float radius = 0f;
+
+        public List<GameComponent> gameComponents = new List<GameComponent>();
 
         public GameComponent(Game game)
         {
+            
             this.game = game;
-
+            
         }
 
         public virtual void Update()
         {
-            Matrix matrix = Matrix.Scaling(1) * Matrix.RotationX(0) * Matrix.RotationY(rotateY) * Matrix.RotationZ(0) * 
+            gameComponents.ForEach(component =>
+            {
+                component.Update();
+            });
+            boundingSphere.Center = position;
+            boundingSphere.Radius = radius*scale;
+            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationX(rotateX) * Matrix.RotationY(rotateY) * Matrix.RotationZ(rotateZ) * 
                             Matrix.Translation(position) * game.camera.viewProjectionMatrix;
-            //Matrix matrix = Matrix.Identity;
-            //matrix.M34 = -1;
             game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
+            //game.d3dContext.UnmapSubresource(shaderResourceView, 0);
         }
 
         public virtual void Draw()
         {
+            gameComponents.ForEach(component => { component.Draw(); });
             SetContext();
-            game.d3dContext.DrawIndexed(indices.Count(), 0,0);
+            game.d3dContext.Draw(points.Count(), 0);
+            //game.d3dContext.DrawIndexed(indices.Count(),0, 0);
 
         }
 
@@ -64,13 +83,12 @@ namespace ComputerGraphics
         protected virtual void CompileShaders()
         {
 
-            vertexShaderByteCode = ShaderBytecode.CompileFromFile("../../hlsl/shaders.hlsl", "VSmain", "vs_4_0", ShaderFlags.Debug | ShaderFlags.SkipOptimization);
+            vertexShaderByteCode = ShaderBytecode.CompileFromFile("../../hlsl/shaders.hlsl", "VSmain", "vs_5_0", ShaderFlags.Debug | ShaderFlags.SkipOptimization);
             vertexShader = new D3D11.VertexShader(game.d3dDevice, vertexShaderByteCode);
 
-            var pixelShaderByteCode = ShaderBytecode.CompileFromFile("../../hlsl/shaders.hlsl", "PSmain", "ps_4_0", ShaderFlags.Debug | ShaderFlags.SkipOptimization);
+            var pixelShaderByteCode = ShaderBytecode.CompileFromFile("../../hlsl/shaders.hlsl", "PSmain", "ps_5_0", ShaderFlags.Debug | ShaderFlags.SkipOptimization);
             pixelShader = new D3D11.PixelShader(game.d3dDevice, pixelShaderByteCode);
-
-
+            
         }
         protected virtual void InitLayout()
         {
@@ -79,8 +97,11 @@ namespace ComputerGraphics
                 ShaderSignature.GetInputSignature(vertexShaderByteCode),
                 new D3D11.InputElement[]
                 {
-                    new D3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0, D3D11.InputClassification.PerVertexData, 0),
-                    new D3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, D3D11.InputClassification.PerVertexData, 0)
+                    new InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0),
+                    //new D3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, D3D11.InputClassification.PerVertexData, 0),
+                    new InputElement("NORMAL", 0, Format.R32G32B32_Float, 1),
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 2),
+                    //new InputElement("TEXCOORD", 0, Format.R8G8B8A8_UNorm, 2),
                 }
             );
         }
@@ -100,13 +121,16 @@ namespace ComputerGraphics
                 OptionFlags = ResourceOptionFlags.None,
                 Usage = ResourceUsage.Default
             });*/
+            
+
+            boundingSphere = new BoundingSphere(new Vector3(0,0,0),radius);
             vertexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.VertexBuffer, points.ToArray());
             indexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
 
             CompileShaders();
             InitLayout();
             InitConstBuff();
-
+            
             rasterizerState = new RasterizerState(game.d3dDevice, new RasterizerStateDescription()
             {
                 FillMode = SharpDX.Direct3D11.FillMode.Solid,
@@ -115,18 +139,45 @@ namespace ComputerGraphics
                 IsScissorEnabled = false,
                 IsDepthClipEnabled = true
             });
+            /*var shaderResourceViewDesc = new ShaderResourceViewDescription()
+            {
+                Format = Format.R32G32_Float,
+                Dimension = ShaderResourceViewDimension.Texture2D,
+            };
+            shaderResourceViewDesc.Texture2D.MipLevels = 1;
+            shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;*/
+            shaderResourceView = new ShaderResourceView(game.d3dDevice, texture);
+            sampler = new SamplerState(game.d3dDevice, new SamplerStateDescription()
+            {
+                Filter = Filter.MinMagMipLinear,
+                AddressU = TextureAddressMode.Wrap,
+                AddressV = TextureAddressMode.Wrap,
+                AddressW = TextureAddressMode.Wrap,
+                BorderColor = Color.Black,
+                ComparisonFunction = Comparison.Never,
+                MaximumAnisotropy = 1,
+                MipLodBias = 0,
+                MinimumLod = 0,
+                MaximumLod = float.MaxValue,
+            });
         }
 
         protected virtual void SetContext()
         {
+            game.d3dContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<MyVertex>(), 0));
             game.d3dContext.InputAssembler.InputLayout = layout;
             game.d3dContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            game.d3dContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexColor>(), 0));
             game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);
-            game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
             
+            game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
             game.d3dContext.VertexShader.Set(vertexShader);
+            
+            game.d3dContext.PixelShader.SetShaderResource(0,shaderResourceView);
+            game.d3dContext.PixelShader.SetSampler(0, sampler);
             game.d3dContext.PixelShader.Set(pixelShader);
+            /*var dataBox = game.d3dContext.MapSubresource(vertexBuffer, 0, MapMode.WriteDiscard, SharpDX.Direct3D11.MapFlags.None);
+            Utilities.Write(dataBox.DataPointer, points.ToArray(), 0, points.Count);
+            game.d3dContext.UnmapSubresource(vertexBuffer, 0);*/
             
             game.d3dDevice.ImmediateContext.Rasterizer.State = rasterizerState;
             
