@@ -99,9 +99,8 @@ namespace ComputerGraphics
                 {
                     new InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0),
                     //new D3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, D3D11.InputClassification.PerVertexData, 0),
-                    new InputElement("NORMAL", 0, Format.R32G32B32_Float, 1),
-                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 2),
-                    //new InputElement("TEXCOORD", 0, Format.R8G8B8A8_UNorm, 2),
+                    new InputElement("NORMAL", 0, Format.R32G32B32_Float, 0),
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 0),
                 }
             );
         }
