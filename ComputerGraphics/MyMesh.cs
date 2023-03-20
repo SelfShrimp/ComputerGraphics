@@ -3,6 +3,12 @@ using SharpDX;
 
 namespace ComputerGraphics
 {
+    public struct ConstBuff
+    {
+        public Matrix transform;
+        public Vector4 lightDirection;
+        public Vector4 lightColor;
+    }
     public class MyMesh
     {
         public Vector3[] Vertices { get; private set; }

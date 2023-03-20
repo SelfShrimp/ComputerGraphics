@@ -12,47 +12,40 @@ namespace ComputerGraphics
 {
     public abstract class GameComponent : IDisposable
     {
-        protected D3D11.Buffer vertexBuffer;
-        protected D3D11.Buffer indexBuffer;
-        public D3D11.Buffer constBuffer;
-        protected CompilationResult vertexShaderByteCode;
-        protected D3D11.VertexShader vertexShader;
-        protected D3D11.PixelShader pixelShader;
-        protected InputLayout layout;
-        protected Game game;
+        private D3D11.Buffer vertexBuffer;
+        private D3D11.Buffer indexBuffer;
+        private D3D11.Buffer constBuffer;
+        private CompilationResult vertexShaderByteCode;
+        private VertexShader vertexShader;
+        private PixelShader pixelShader;
+        private InputLayout layout;
+        private readonly Game game;
 
         //protected ObjModel objectModel = new ObjModel();
-        public List<MyVertex> points = new List<MyVertex>();
-        public List<int> indices = new List<int>();
+        protected readonly List<MyVertex> points = new();
+        public List<int> indices = new();
 
         private RasterizerState rasterizerState;
         //public MyMesh meshes;
 
         public Vector3 position;
-        public Vector3 positionStock;
-        public float rotateX = 0f;
-        public float rotateY = 0f;
-        public float rotateZ = 0f;
-        protected float speedRotateY = 0f;
-        protected float speed = 0f;
-
+        public Quaternion quaternion = Quaternion.Identity;
         public float scale = 1f;
         //protected float speedZ = 0f;
 
-        protected ShaderResourceView shaderResourceView;
-        public Texture2D texture;
+        private ShaderResourceView shaderResourceView;
+        protected Texture2D texture;
         private SamplerState sampler;
 
         public BoundingSphere boundingSphere;
         public float radius = 0f;
 
-        public List<GameComponent> gameComponents = new List<GameComponent>();
+        public List<GameComponent> gameComponents = new();
+
 
         public GameComponent(Game game)
         {
-            
             this.game = game;
-            
         }
 
         public virtual void Update()
@@ -63,10 +56,11 @@ namespace ComputerGraphics
             });
             boundingSphere.Center = position;
             boundingSphere.Radius = radius*scale;
-            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationX(rotateX) * Matrix.RotationY(rotateY) * Matrix.RotationZ(rotateZ) * 
-                            Matrix.Translation(position) * game.camera.viewProjectionMatrix;
+            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion)* 
+                            Matrix.Translation(position) *game.camera.viewProjectionMatrix;
+            /*ConstBuff constBuff = new ConstBuff();
+            constBuff.transform = matrix;*/
             game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
-            //game.d3dContext.UnmapSubresource(shaderResourceView, 0);
         }
 
         public virtual void Draw()
@@ -75,7 +69,6 @@ namespace ComputerGraphics
             SetContext();
             game.d3dContext.Draw(points.Count(), 0);
             //game.d3dContext.DrawIndexed(indices.Count(),0, 0);
-
         }
 
         public virtual void Move() { }
@@ -92,6 +85,7 @@ namespace ComputerGraphics
         }
         protected virtual void InitLayout()
         {
+            //slot params in hlsl
             layout = new InputLayout(
                 game.d3dDevice,
                 ShaderSignature.GetInputSignature(vertexShaderByteCode),
@@ -107,7 +101,7 @@ namespace ComputerGraphics
 
         protected virtual void InitConstBuff()
         {
-            constBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<Matrix>(), ResourceUsage.Default,
+            constBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<ConstBuff>(), ResourceUsage.Default,
                 BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
         }
 
@@ -124,7 +118,7 @@ namespace ComputerGraphics
 
             boundingSphere = new BoundingSphere(new Vector3(0,0,0),radius);
             vertexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.VertexBuffer, points.ToArray());
-            indexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
+            //indexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
 
             CompileShaders();
             InitLayout();
@@ -132,7 +126,7 @@ namespace ComputerGraphics
             
             rasterizerState = new RasterizerState(game.d3dDevice, new RasterizerStateDescription()
             {
-                FillMode = SharpDX.Direct3D11.FillMode.Solid,
+                FillMode = FillMode.Solid,
                 CullMode = CullMode.Back,
                 IsFrontCounterClockwise = true,
                 IsScissorEnabled = false,
@@ -163,7 +157,7 @@ namespace ComputerGraphics
 
         protected virtual void SetContext()
         {
-            game.d3dContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<MyVertex>(), 0));
+            game.d3dContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<MyVertex>(), 0));
             game.d3dContext.InputAssembler.InputLayout = layout;
             game.d3dContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);

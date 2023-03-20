@@ -18,6 +18,8 @@ struct PS_IN
 cbuffer cBuf
 {
    matrix transform;
+   float4 lightDirection;
+   float4 lightColor;
 };
 
 struct VS_IN
@@ -50,6 +52,11 @@ SamplerState	Sampler			: register(s0);
 float4 PSmain( PS_IN input ) : SV_Target
 {
    float4 color = Picture.Sample(Sampler, input.tex);
+   float3 N = normalize(input.normal);
+   float3 L = normalize(float3(0.8f, 0.8f, 0.8f));
+   float4 diffuseColor = float4(1.0f, 1.0f, 1.0f, 0.0f);
+   float4 diffuse = saturate(dot(N, L)) * diffuseColor;
+   color *= diffuse;
    return color;
 }  
 
