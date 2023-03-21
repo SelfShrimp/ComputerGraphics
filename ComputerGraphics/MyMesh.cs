@@ -29,12 +29,14 @@ namespace ComputerGraphics
         public Vector4 Position;
         public Vector3 Normal;
         public Vector2 TextureCoordinate;
+        public Vector4 Color;
 
-        public MyVertex(Vector3 position, Vector3 normal, Vector2 textureCoordinate)
+        public MyVertex(Vector3 position, Vector3 normal, Vector2 textureCoordinate, Vector4 color)
         {
             Position = new Vector4(position,1);
             Normal = normal;
             TextureCoordinate = textureCoordinate;
+            Color = color;
         }
     }
     /*public struct PosTex {

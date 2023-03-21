@@ -17,7 +17,7 @@ struct PS_IN
 
 cbuffer cBuf
 {
-   matrix transform;
+   row_major matrix transform;
    float4 lightDirection;
    float4 lightColor;
 };
@@ -27,6 +27,7 @@ struct VS_IN
    float4 pos : POSITION;
    float3 normal	: NORMAL0;
    float2 tex : TEXCOORD0;
+   float4 dif : DIF;
 };
 
 struct PS_IN
@@ -34,30 +35,32 @@ struct PS_IN
    float4 pos : SV_POSITION;
    float3 normal	: NORMAL0;
    float2 tex : TEXCOORD0;
+   float4 dif : DIF  ;
 };
 
 PS_IN VSmain(VS_IN input)
 {
    PS_IN output = (PS_IN)0;
-   output.pos = mul(transform, input.pos);
-   output.normal = input.normal;
+   output.pos = mul(input.pos, transform);
+   output.normal = mul(float4(input.normal,0), transform);
    output.tex = input.tex.xy;
-   
+   output.dif = input.dif;
    return output;
 }
 
 Texture2D		Picture		: register(t0);
 SamplerState	Sampler			: register(s0);
 
-float4 PSmain( PS_IN input ) : SV_Target
+float3 PSmain( PS_IN input ) : SV_Target
 {
    float4 color = Picture.Sample(Sampler, input.tex);
+   return color;
    float3 N = normalize(input.normal);
    float3 L = normalize(float3(0.8f, 0.8f, 0.8f));
-   float4 diffuseColor = float4(1.0f, 1.0f, 1.0f, 0.0f);
+   float4 diffuseColor = input.dif;
    float4 diffuse = saturate(dot(N, L)) * diffuseColor;
    color *= diffuse;
-   return color;
+   return diffuse;
 }  
 
 /*float4 PSmain( PS_IN input ) : SV_Target

@@ -12,7 +12,7 @@ namespace ComputerGraphics
             Game game = new Game();
             ObjObject plane = new ObjObject(game,"../../assets/Plane_obj.obj", "../../assets/textures/grass_tex.png");
             plane.quaternion = plane.quaternion * Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI / 2);
-            plane.position.Y = -1f;
+            plane.position.Y = -10f;
             ObjObject ball = new ObjObject(game,"../../assets/Ball_obj.obj", "../../assets/textures/colors.jpg");
             ObjObject ball2 = new ObjObject(game,"../../assets/Ball_obj.obj", "../../assets/textures/ball_tex.jpg");
             ball2.position.X = 20f;
@@ -28,9 +28,9 @@ namespace ComputerGraphics
 
             game.components.Add(plane);
             game.components.Add(ball);
-            game.components.Add(ball2);
+            /*game.components.Add(ball2);
             game.components.Add(ball3);
-            game.components.Add(ball4);
+            game.components.Add(ball4);*/
             
             //game.components.Add(test);
             game.Run();

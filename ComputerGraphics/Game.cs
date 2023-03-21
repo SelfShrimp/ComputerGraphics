@@ -117,7 +117,9 @@ namespace ComputerGraphics
                     Vector3 velocity = direction * 0.1f;
                     components[1].position += velocity;
                     //components[1].rotateX += 0.1f;
-                    components[1].quaternion = Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)-Math.PI / 120) * components[1].quaternion;
+                    var inverMatrix = Matrix.Invert(camera.viewMatrix);
+                    
+                    components[1].quaternion = Quaternion.RotationAxis(inverMatrix.Right, (float)-Math.PI / 120) * components[1].quaternion;
                     foreach (var gameComponent in components[1].gameComponents)
                     {
                         gameComponent.position += velocity;

@@ -56,7 +56,8 @@ namespace ComputerGraphics
             });
             boundingSphere.Center = position;
             boundingSphere.Radius = radius*scale;
-            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion)* 
+            Console.WriteLine(quaternion);
+            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion) * 
                             Matrix.Translation(position) *game.camera.viewProjectionMatrix;
             /*ConstBuff constBuff = new ConstBuff();
             constBuff.transform = matrix;*/
@@ -95,6 +96,7 @@ namespace ComputerGraphics
                     //new D3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, D3D11.InputClassification.PerVertexData, 0),
                     new InputElement("NORMAL", 0, Format.R32G32B32_Float, 0),
                     new InputElement("TEXCOORD", 0, Format.R32G32_Float, 0),
+                    new InputElement("DIF", 0, Format.R32G32B32_Float, 0),
                 }
             );
         }
@@ -126,7 +128,7 @@ namespace ComputerGraphics
             
             rasterizerState = new RasterizerState(game.d3dDevice, new RasterizerStateDescription()
             {
-                FillMode = FillMode.Solid,
+                FillMode = FillMode.Wireframe,
                 CullMode = CullMode.Back,
                 IsFrontCounterClockwise = true,
                 IsScissorEnabled = false,

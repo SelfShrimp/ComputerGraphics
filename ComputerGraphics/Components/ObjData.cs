@@ -125,7 +125,7 @@ public class ObjObject : GameComponent
                             int normalIndex = int.Parse(indicesParts[2]) - 1;
                             int texIndex = int.Parse(indicesParts[1]) - 1;
                             //this.indices.Add(vertexIndex);
-                            points.Add(new MyVertex(vertices[vertexIndex],normals[normalIndex],texCoords[texIndex]));
+                            points.Add(new MyVertex(vertices[vertexIndex],normals[normalIndex],texCoords[texIndex], new Vector4(1f,1f,1f, 1f)));
                         }
 
                         break;

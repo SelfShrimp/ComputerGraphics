@@ -22,7 +22,7 @@ namespace ComputerGraphics.camera
         {
             viewMatrix = Matrix.LookAtLH(position, target, up);
             projectionMatrix = Matrix.PerspectiveFovLH(MathUtil.PiOverFour, 1.0f, nearPlane, farPlane);
-            viewProjectionMatrix = worldMatrix * viewMatrix * projectionMatrix;
+            viewProjectionMatrix = viewMatrix * projectionMatrix;
         }   
         public void RotateAroundTarget(float angle, Vector3 axis)
         {
