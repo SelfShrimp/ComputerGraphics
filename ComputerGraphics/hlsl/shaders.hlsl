@@ -19,7 +19,10 @@ cbuffer cBuf
 {
    row_major matrix transform;
    float4 lightDirection;
-   float4 lightColor;
+   //float3 ambientColor;
+   float3 diffuseColor;
+   //float3 specularColor;
+   //float shininess;
 };
 
 struct VS_IN
@@ -51,16 +54,26 @@ PS_IN VSmain(VS_IN input)
 Texture2D		Picture		: register(t0);
 SamplerState	Sampler			: register(s0);
 
-float3 PSmain( PS_IN input ) : SV_Target
+float4 PSmain( PS_IN input ) : SV_Target
 {
    float4 color = Picture.Sample(Sampler, input.tex);
-   return color;
    float3 N = normalize(input.normal);
-   float3 L = normalize(float3(0.8f, 0.8f, 0.8f));
+   float3 L = normalize(float3(1.0f, 10.0f, 5.0f));
+   float3 R = reflect(L, N);
    float4 diffuseColor = input.dif;
    float4 diffuse = saturate(dot(N, L)) * diffuseColor;
    color *= diffuse;
-   return diffuse;
+
+   float3 ambientColor = float3(0.4f,0.4f,0.4f);
+   color *= float4(ambientColor, 1.0f);
+
+   float3 V = normalize(-input.pos.xyz);
+   float shininess = 0.4f;
+   float3 specularColor = float3(0.4f,0.4f,0.4f);
+   float specular = pow(saturate(dot(R, V)), shininess);
+   color += float4(specularColor, 1.0f) * specular;
+   
+   return color;
 }  
 
 /*float4 PSmain( PS_IN input ) : SV_Target

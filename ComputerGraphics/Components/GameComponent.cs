@@ -128,7 +128,7 @@ namespace ComputerGraphics
             
             rasterizerState = new RasterizerState(game.d3dDevice, new RasterizerStateDescription()
             {
-                FillMode = FillMode.Wireframe,
+                FillMode = FillMode.Solid,
                 CullMode = CullMode.Back,
                 IsFrontCounterClockwise = true,
                 IsScissorEnabled = false,
