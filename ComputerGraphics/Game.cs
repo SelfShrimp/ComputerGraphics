@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Windows.Input;
 using SharpDX.Direct3D11;
 using ComputerGraphics.camera;
-using ComputerGraphics.shadows;
 
 namespace ComputerGraphics
 {
@@ -29,6 +28,7 @@ namespace ComputerGraphics
 
         private D3D11.RenderTargetView renderTargetView;
         private D3D11.DepthStencilView depthStencilView;
+        private RenderTargetView shadowRenderTargetView;
         private Viewport viewport;
 
         public readonly List<GameComponent> components = new List<GameComponent>();
@@ -86,6 +86,7 @@ namespace ComputerGraphics
                     /*var a = Vector3.Transform(camera.position - camera.target, Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)-Math.PI / 180)) ;
                     camera.position = new Vector3(a.X,a.Y,a.Z)+ components[1].position;*/
                     camera.RotateAroundTarget((float)-Math.PI / 180, new Vector3(0, 1, 0));
+                    components[1].quaternion = Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)-Math.PI / 180) * components[1].quaternion;
                 }
 
                 if (Keyboard.IsKeyDown(Key.Right))
@@ -93,6 +94,7 @@ namespace ComputerGraphics
                     /*var a = Vector3.Transform(camera.position - camera.target, Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)Math.PI / 180)) ;
                     camera.position = new Vector3(a.X,a.Y,a.Z)+ components[1].position;*/
                     camera.RotateAroundTarget((float)Math.PI / 180, new Vector3(0, 1, 0));
+                    components[1].quaternion = Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)Math.PI / 180) * components[1].quaternion;
                 }
 
                 if (Keyboard.IsKeyDown(Key.Up))
@@ -243,7 +245,7 @@ namespace ComputerGraphics
                 MaxDepth = 1.0f
             };
             d3dContext.Rasterizer.SetViewport(viewport);
-
+            
             var depthBuffer = new Texture2D(d3dDevice, new Texture2DDescription()
             {
                 Format = Format.D32_Float_S8X24_UInt,
@@ -261,6 +263,21 @@ namespace ComputerGraphics
 
             var backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
             renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
+            
+            var shadowRenderTargetDesc = new Texture2DDescription {
+                Width = Width,
+                Height = Height,
+                MipLevels = 1,
+                ArraySize = 1,
+                Format = Format.R8G8B8A8_UNorm,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.RenderTarget,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            };
+            var shadowRenderTarget = new Texture2D(d3dDevice, shadowRenderTargetDesc);
+            shadowRenderTargetView = new RenderTargetView(d3dDevice, shadowRenderTarget);
         }
         private void Update()
         {
@@ -303,6 +320,10 @@ namespace ComputerGraphics
 
         private void Draw()
         {
+            d3dContext.OutputMerger.SetTargets(depthStencilView, shadowRenderTargetView);
+            d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(1, 1, 1));
+            d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+
             d3dContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
             d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
             d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);

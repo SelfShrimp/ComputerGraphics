@@ -134,6 +134,7 @@
     <Content Include="assets\textures\colors.jpg" />
     <Content Include="assets\textures\ball_tex.jpg" />
     <Content Include="assets\textures\grass_tex.png" />
+    <Content Include="assets\untitled.obj" />
     <Content Include="hlsl\shaders.hlsl" />
   </ItemGroup>
   <ItemGroup>

@@ -15,6 +15,7 @@ namespace ComputerGraphics
         private D3D11.Buffer vertexBuffer;
         private D3D11.Buffer indexBuffer;
         private D3D11.Buffer constBuffer;
+        private D3D11.Buffer lightConstBuffer;
         private CompilationResult vertexShaderByteCode;
         private VertexShader vertexShader;
         private PixelShader pixelShader;
@@ -34,6 +35,7 @@ namespace ComputerGraphics
         //protected float speedZ = 0f;
 
         private ShaderResourceView shaderResourceView;
+        private ShaderResourceView shaderResourceShadowView;
         protected Texture2D texture;
         private SamplerState sampler;
 
@@ -59,11 +61,24 @@ namespace ComputerGraphics
             Console.WriteLine(quaternion);
             Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion) * 
                             Matrix.Translation(position) *game.camera.viewProjectionMatrix;
-            /*ConstBuff constBuff = new ConstBuff();
-            constBuff.transform = matrix;*/
-            game.d3dContext.UpdateSubresource(ref matrix, constBuffer);
-        }
+            
+            ConstBuff constBuff = new ConstBuff();
+            constBuff.transform = matrix;
+            game.d3dContext.UpdateSubresource(ref constBuff, constBuffer);
 
+            LightConstBuff lightConstBuff = new LightConstBuff();
+            lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
+            lightConstBuff.diffuseColor = new Vector3(0.8f,0.8f,0.8f);
+            lightConstBuff.specularColor = new Vector3(0.4f,0.4f,0.4f);
+            lightConstBuff.position = new Vector3(2f, 2f, 2f);
+            lightConstBuff.direction = new Vector3(1f, 1f, 1f);
+            Matrix lightView = Matrix.LookAtLH(Vector3.Zero, lightConstBuff.direction, Vector3.UnitY);
+            Matrix lightProjection = Matrix.OrthoLH(10, 10, -10, 10);
+            Matrix lightViewProjection = Matrix.Multiply(lightView, lightProjection);
+            lightConstBuff.lightMatrix = lightViewProjection;
+            game.d3dContext.UpdateSubresource(ref lightConstBuff, lightConstBuffer);
+        }
+        
         public virtual void Draw()
         {
             gameComponents.ForEach(component => { component.Draw(); });
@@ -105,6 +120,8 @@ namespace ComputerGraphics
         {
             constBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<ConstBuff>(), ResourceUsage.Default,
                 BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            lightConstBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<LightConstBuff>(), ResourceUsage.Default,
+                BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
         }
 
         protected virtual void Init()
@@ -142,6 +159,19 @@ namespace ComputerGraphics
             shaderResourceViewDesc.Texture2D.MipLevels = 1;
             shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;*/
             shaderResourceView = new ShaderResourceView(game.d3dDevice, texture);
+            /*var shadowTexture = new Texture2D(game.d3dDevice, new Texture2DDescription{
+                Format = Format.R32_Typeless,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = 512,
+                Height = 512,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            });*/
+            //shaderResourceShadowView = new ShaderResourceView(game.d3dDevice, shadowTexture);
             sampler = new SamplerState(game.d3dDevice, new SamplerStateDescription()
             {
                 Filter = Filter.MinMagMipLinear,
@@ -155,6 +185,42 @@ namespace ComputerGraphics
                 MinimumLod = 0,
                 MaximumLod = float.MaxValue,
             });
+
+            Texture2DDescription shadowMapDesc = new Texture2DDescription
+            {
+                Width = 512,
+                Height = 512,
+                MipLevels = 1,
+                ArraySize = 1,
+                Format = Format.R32_Typeless,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            };
+
+            var shadowMapTexture = new Texture2D(game.d3dDevice, shadowMapDesc);
+
+            DepthStencilViewDescription dsvDesc = new DepthStencilViewDescription
+            {
+                Format = Format.D32_Float,
+                Dimension = DepthStencilViewDimension.Texture2D,
+                Texture2D = { MipSlice = 0 }
+            };
+
+            var shadowMapDSV = new DepthStencilView(game.d3dDevice, shadowMapTexture, dsvDesc);
+
+            ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+            {
+                Format = Format.R32_Float,
+                Dimension = ShaderResourceViewDimension.Texture2D,
+                Texture2D = { MipLevels = 1, MostDetailedMip = 0 }
+            };
+
+            var shadowMapSRV = new ShaderResourceView(game.d3dDevice, shadowMapTexture, srvDesc);
+
+            
         }
 
         protected virtual void SetContext()
@@ -165,10 +231,13 @@ namespace ComputerGraphics
             game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);
             
             game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
+            game.d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
             game.d3dContext.VertexShader.Set(vertexShader);
             
             game.d3dContext.PixelShader.SetShaderResource(0,shaderResourceView);
+            //game.d3dContext.PixelShader.SetShaderResource(1, shaderResourceShadowView);
             game.d3dContext.PixelShader.SetSampler(0, sampler);
+            //game.d3dContext.PixelShader.SetSampler(1, sampler);
             game.d3dContext.PixelShader.Set(pixelShader);
             /*var dataBox = game.d3dContext.MapSubresource(vertexBuffer, 0, MapMode.WriteDiscard, SharpDX.Direct3D11.MapFlags.None);
             Utilities.Write(dataBox.DataPointer, points.ToArray(), 0, points.Count);

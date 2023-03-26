@@ -1,13 +1,34 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using SharpDX;
 
 namespace ComputerGraphics
 {
     public struct ConstBuff
     {
+        //public Matrix view;
+        //public Matrix projection;
         public Matrix transform;
-        public Vector4 lightDirection;
-        public Vector4 lightColor;
+        //public Matrix lightViewProj;
+        //public Vector4 lightDirection;
+        //public Vector4 lightColor;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 80)]
+    public struct LightConstBuff
+    {
+        [FieldOffset(0)]
+        public Vector3 ambientColor;
+        [FieldOffset(16)]
+        public Vector3 diffuseColor;
+        [FieldOffset(32)]
+        public Vector3 specularColor;
+        [FieldOffset(48)]
+        public Vector3 position;
+        [FieldOffset(64)]
+        public Vector3 direction;
+        [FieldOffset(80)]
+        public Matrix lightMatrix;
     }
     public class MyMesh
     {
@@ -29,14 +50,14 @@ namespace ComputerGraphics
         public Vector4 Position;
         public Vector3 Normal;
         public Vector2 TextureCoordinate;
-        public Vector4 Color;
+        //public Vector4 Color;
 
         public MyVertex(Vector3 position, Vector3 normal, Vector2 textureCoordinate, Vector4 color)
         {
             Position = new Vector4(position,1);
             Normal = normal;
             TextureCoordinate = textureCoordinate;
-            Color = color;
+            //Color = color;
         }
     }
     /*public struct PosTex {
