@@ -4,14 +4,13 @@ using SharpDX;
 
 namespace ComputerGraphics
 {
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct ConstBuff
     {
-        //public Matrix view;
-        //public Matrix projection;
+        [FieldOffset(0)]
         public Matrix transform;
-        //public Matrix lightViewProj;
-        //public Vector4 lightDirection;
-        //public Vector4 lightColor;
+        [FieldOffset(16)]
+        public Matrix worldMatrix;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 80)]

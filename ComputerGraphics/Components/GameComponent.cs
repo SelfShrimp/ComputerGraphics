@@ -38,7 +38,7 @@ namespace ComputerGraphics
         private ShaderResourceView shaderResourceShadowView;
         protected Texture2D texture;
         private SamplerState sampler;
-
+        private SamplerState shadowSampler;
         public BoundingSphere boundingSphere;
         public float radius = 0f;
 
@@ -59,26 +59,34 @@ namespace ComputerGraphics
             boundingSphere.Center = position;
             boundingSphere.Radius = radius*scale;
             Console.WriteLine(quaternion);
-            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion) * 
-                            Matrix.Translation(position) *game.camera.viewProjectionMatrix;
             
             ConstBuff constBuff = new ConstBuff();
+            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion) *
+                            Matrix.Translation(position);
+            constBuff.worldMatrix = matrix;
+            matrix = matrix * game.camera.viewProjectionMatrix;
             constBuff.transform = matrix;
-            game.d3dContext.UpdateSubresource(ref constBuff, constBuffer);
+            
 
-            LightConstBuff lightConstBuff = new LightConstBuff();
-            lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
-            lightConstBuff.diffuseColor = new Vector3(0.8f,0.8f,0.8f);
-            lightConstBuff.specularColor = new Vector3(0.4f,0.4f,0.4f);
-            lightConstBuff.position = new Vector3(2f, 2f, 2f);
-            lightConstBuff.direction = new Vector3(1f, 1f, 1f);
-            Matrix lightView = Matrix.LookAtLH(Vector3.Zero, lightConstBuff.direction, Vector3.UnitY);
-            Matrix lightProjection = Matrix.OrthoLH(10, 10, -10, 10);
-            Matrix lightViewProjection = Matrix.Multiply(lightView, lightProjection);
-            lightConstBuff.lightMatrix = lightViewProjection;
-            game.d3dContext.UpdateSubresource(ref lightConstBuff, lightConstBuffer);
+            game.d3dContext.UpdateSubresource(ref constBuff, constBuffer);
         }
-        
+
+        public virtual void UpdateForLight()
+        {
+            gameComponents.ForEach(component =>
+            {
+                component.UpdateForLight();
+            });
+            boundingSphere.Center = position;
+            boundingSphere.Radius = radius * scale;
+            Console.WriteLine(quaternion);
+
+            
+            game.d3dContext.PixelShader.SetSampler(1, shadowSampler);
+            game.d3dContext.PixelShader.Set(null);
+        }
+
+
         public virtual void Draw()
         {
             gameComponents.ForEach(component => { component.Draw(); });
@@ -120,25 +128,15 @@ namespace ComputerGraphics
         {
             constBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<ConstBuff>(), ResourceUsage.Default,
                 BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            lightConstBuffer = new D3D11.Buffer(game.d3dDevice, Utilities.SizeOf<LightConstBuff>(), ResourceUsage.Default,
-                BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            
         }
 
         protected virtual void Init()
         {
-            /*vertexBuffer = D3D11.Buffer.Create(game.d3dDevice, meshes.vertices.ToArray(), new BufferDescription
-            {
-                BindFlags = BindFlags.VertexBuffer,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default
-            });*/
-            
 
             boundingSphere = new BoundingSphere(new Vector3(0,0,0),radius);
             vertexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.VertexBuffer, points.ToArray());
-            //indexBuffer = D3D11.Buffer.Create(game.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
-
+            
             CompileShaders();
             InitLayout();
             InitConstBuff();
@@ -151,27 +149,9 @@ namespace ComputerGraphics
                 IsScissorEnabled = false,
                 IsDepthClipEnabled = true
             });
-            /*var shaderResourceViewDesc = new ShaderResourceViewDescription()
-            {
-                Format = Format.R32G32_Float,
-                Dimension = ShaderResourceViewDimension.Texture2D,
-            };
-            shaderResourceViewDesc.Texture2D.MipLevels = 1;
-            shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;*/
+
             shaderResourceView = new ShaderResourceView(game.d3dDevice, texture);
-            /*var shadowTexture = new Texture2D(game.d3dDevice, new Texture2DDescription{
-                Format = Format.R32_Typeless,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = 512,
-                Height = 512,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            });*/
-            //shaderResourceShadowView = new ShaderResourceView(game.d3dDevice, shadowTexture);
+
             sampler = new SamplerState(game.d3dDevice, new SamplerStateDescription()
             {
                 Filter = Filter.MinMagMipLinear,
@@ -185,42 +165,19 @@ namespace ComputerGraphics
                 MinimumLod = 0,
                 MaximumLod = float.MaxValue,
             });
-
-            Texture2DDescription shadowMapDesc = new Texture2DDescription
+            shadowSampler = new SamplerState(game.d3dDevice, new SamplerStateDescription()
             {
-                Width = 512,
-                Height = 512,
-                MipLevels = 1,
-                ArraySize = 1,
-                Format = Format.R32_Typeless,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            };
-
-            var shadowMapTexture = new Texture2D(game.d3dDevice, shadowMapDesc);
-
-            DepthStencilViewDescription dsvDesc = new DepthStencilViewDescription
-            {
-                Format = Format.D32_Float,
-                Dimension = DepthStencilViewDimension.Texture2D,
-                Texture2D = { MipSlice = 0 }
-            };
-
-            var shadowMapDSV = new DepthStencilView(game.d3dDevice, shadowMapTexture, dsvDesc);
-
-            ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
-            {
-                Format = Format.R32_Float,
-                Dimension = ShaderResourceViewDimension.Texture2D,
-                Texture2D = { MipLevels = 1, MostDetailedMip = 0 }
-            };
-
-            var shadowMapSRV = new ShaderResourceView(game.d3dDevice, shadowMapTexture, srvDesc);
-
-            
+                Filter = Filter.ComparisonMinMagMipLinear,
+                AddressU = TextureAddressMode.Wrap,
+                AddressV = TextureAddressMode.Wrap,
+                AddressW = TextureAddressMode.Wrap,
+                BorderColor = Color.Black,
+                ComparisonFunction = Comparison.LessEqual,
+                MaximumAnisotropy = 1,
+                MipLodBias = 0,
+                MinimumLod = 0,
+                MaximumLod = float.MaxValue,
+            });
         }
 
         protected virtual void SetContext()
@@ -231,7 +188,7 @@ namespace ComputerGraphics
             game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);
             
             game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
-            game.d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
+            //game.d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
             game.d3dContext.VertexShader.Set(vertexShader);
             
             game.d3dContext.PixelShader.SetShaderResource(0,shaderResourceView);
@@ -250,9 +207,12 @@ namespace ComputerGraphics
         public void Dispose()
         {
             vertexBuffer.Dispose();
+            indexBuffer.Dispose();
             constBuffer.Dispose();
             vertexShader.Dispose();
             pixelShader.Dispose();
+            vertexShaderByteCode.Dispose();
+            layout.Dispose();
         }
     }
 }

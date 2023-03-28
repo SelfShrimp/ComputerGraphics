@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Windows.Input;
 using SharpDX.Direct3D11;
 using ComputerGraphics.camera;
+using ComputerGraphics.shadows;
+using System.Runtime.Remoting.Contexts;
 
 namespace ComputerGraphics
 {
@@ -28,8 +30,11 @@ namespace ComputerGraphics
 
         private D3D11.RenderTargetView renderTargetView;
         private D3D11.DepthStencilView depthStencilView;
-        private RenderTargetView shadowRenderTargetView;
         private Viewport viewport;
+
+        public ShadowMap shadow;
+        public D3D11.Buffer lightConstBuffer;
+        public LightConstBuff lightConstBuff;
 
         public readonly List<GameComponent> components = new List<GameComponent>();
 
@@ -91,7 +96,7 @@ namespace ComputerGraphics
 
                 if (Keyboard.IsKeyDown(Key.Right))
                 {
-                    /*var a = Vector3.Transform(camera.position - camera.target, Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)Math.PI / 180)) ;
+                    /*var a = Vector3.Transform(camera.position - camera.target, Quaternion.RotationAxis(new Vector3    (0, 1, 0), (float)Math.PI / 180)) ;
                     camera.position = new Vector3(a.X,a.Y,a.Z)+ components[1].position;*/
                     camera.RotateAroundTarget((float)Math.PI / 180, new Vector3(0, 1, 0));
                     components[1].quaternion = Quaternion.RotationAxis(new Vector3(0, 1, 0), (float)Math.PI / 180) * components[1].quaternion;
@@ -263,21 +268,12 @@ namespace ComputerGraphics
 
             var backBuffer = swapChain.GetBackBuffer<D3D11.Texture2D>(0);
             renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
-            
-            var shadowRenderTargetDesc = new Texture2DDescription {
-                Width = Width,
-                Height = Height,
-                MipLevels = 1,
-                ArraySize = 1,
-                Format = Format.R8G8B8A8_UNorm,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.RenderTarget,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            };
-            var shadowRenderTarget = new Texture2D(d3dDevice, shadowRenderTargetDesc);
-            shadowRenderTargetView = new RenderTargetView(d3dDevice, shadowRenderTarget);
+
+            shadow = new ShadowMap(d3dDevice);
+            lightConstBuffer = new D3D11.Buffer(d3dDevice, Utilities.SizeOf<LightConstBuff>(), ResourceUsage.Default,
+                BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+
         }
         private void Update()
         {
@@ -317,20 +313,49 @@ namespace ComputerGraphics
 
             components.ForEach(component => { component.Update(); });
         }
-
+        
+        private void SomeDoWithLight()
+        {
+            lightConstBuff = new LightConstBuff();
+            lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
+            lightConstBuff.diffuseColor = new Vector3(0.8f, 0.8f, 0.8f);
+            lightConstBuff.specularColor = new Vector3(0.4f, 0.4f, 0.4f);
+            lightConstBuff.position = camera.position;
+            lightConstBuff.direction = new Vector3(1f, -3f, -10f);
+            Matrix lightView = Matrix.LookAtLH(new Vector3(100f,100f,100f), lightConstBuff.direction, Vector3.UnitY);
+            Matrix lightProjection = Matrix.OrthoLH(200, 200, 0.1f, 1000);
+            Matrix lightViewProjection = Matrix.Multiply(lightView, lightProjection);
+            lightConstBuff.lightMatrix = lightViewProjection;
+            d3dContext.UpdateSubresource(ref lightConstBuff, lightConstBuffer);
+        }
         private void Draw()
         {
-            d3dContext.OutputMerger.SetTargets(depthStencilView, shadowRenderTargetView);
-            d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(1, 1, 1));
-            d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            SomeDoWithLight();
+            d3dContext.OutputMerger.SetTargets(shadow.shadowDepthView, Array.Empty<RenderTargetView>());
+
+            d3dContext.ClearDepthStencilView(shadow.shadowDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            
+            foreach (var component in components)
+            {
+                component.UpdateForLight();
+                //d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
+                component.Draw();
+            }
+
 
             d3dContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
             d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
             d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            
+            d3dContext.PixelShader.SetShaderResource(1, shadow.shadowMapSRV);
+            d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
+
+            Update();
             foreach (var component in components)
             {
                 component.Draw();
             }
+            
             swapChain.Present(1, PresentFlags.None);
         }
 
