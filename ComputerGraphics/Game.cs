@@ -319,7 +319,7 @@ namespace ComputerGraphics
             lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
             lightConstBuff.diffuseColor = new Vector3(0.8f, 0.8f, 0.8f);
             lightConstBuff.specularColor = new Vector3(0.4f, 0.4f, 0.4f);
-            lightConstBuff.position = Vector3.TransformCoordinate(new Vector3(100f, 100f, 100f), Matrix.Invert(camera.viewMatrix));
+            lightConstBuff.position = new Vector3(100f, 100f, 0f);
             lightConstBuff.direction = new Vector3(1f, -3f, -10f);
             Matrix lightView = Matrix.LookAtLH(new Vector3(100f,100f,100f), lightConstBuff.direction, Vector3.UnitY);
             Matrix lightProjection = Matrix.OrthoLH(200, 200, 0.1f, 1000);
