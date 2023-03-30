@@ -52,6 +52,8 @@ namespace ComputerGraphics
 
         public virtual void Update()
         {
+            game.d3dContext.PixelShader.Set(null);
+            SetContext();
             gameComponents.ForEach(component =>
             {
                 component.Update();
@@ -160,7 +162,7 @@ namespace ComputerGraphics
                 AddressW = TextureAddressMode.Wrap,
                 BorderColor = Color.Black,
                 ComparisonFunction = Comparison.Never,
-                MaximumAnisotropy = 1,
+                MaximumAnisotropy = 1,  
                 MipLodBias = 0,
                 MinimumLod = 0,
                 MaximumLod = float.MaxValue,

@@ -4,6 +4,7 @@ using SharpDX.Direct3D11;
 using D3D11 = SharpDX.Direct3D11;
 using System;
 using System.Runtime.Remoting.Contexts;
+using SharpDX;
 
 namespace ComputerGraphics.shadows;
 
@@ -22,8 +23,8 @@ public class ShadowMap : IDisposable
             Format = Format.R32_Typeless,
             ArraySize = 1,
             MipLevels = 1,
-            Width = 1024,
-            Height = 1024,
+            Width = 512,
+            Height = 512,
             SampleDescription = new SampleDescription(1, 0),
             Usage = ResourceUsage.Default,
             BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,

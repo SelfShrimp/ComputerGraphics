@@ -51,7 +51,7 @@ PS_IN VSmain(VS_IN input)
    PS_IN output = (PS_IN)0;
    output.pos = mul(input.pos, transform);
    output.shadowPos = mul(input.pos, world);
-   output.normal = mul(float4(input.normal,0), transform);
+   output.normal = mul(float4(input.normal,0), world);
    output.tex = input.tex.xy;
    return output;
 }

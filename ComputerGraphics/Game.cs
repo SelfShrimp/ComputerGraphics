@@ -249,13 +249,12 @@ namespace ComputerGraphics
                 MinDepth = 0.0f,
                 MaxDepth = 1.0f
             };
-            d3dContext.Rasterizer.SetViewport(viewport);
             
             var depthBuffer = new Texture2D(d3dDevice, new Texture2DDescription()
             {
                 Format = Format.D32_Float_S8X24_UInt,
                 ArraySize = 1,
-                MipLevels = 1,
+                MipLevels = 0,
                 Width = Width,
                 Height = Height,
                 SampleDescription = new SampleDescription(1, 0),
@@ -320,7 +319,7 @@ namespace ComputerGraphics
             lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
             lightConstBuff.diffuseColor = new Vector3(0.8f, 0.8f, 0.8f);
             lightConstBuff.specularColor = new Vector3(0.4f, 0.4f, 0.4f);
-            lightConstBuff.position = camera.position;
+            lightConstBuff.position = Vector3.TransformCoordinate(new Vector3(100f, 100f, 100f), Matrix.Invert(camera.viewMatrix));
             lightConstBuff.direction = new Vector3(1f, -3f, -10f);
             Matrix lightView = Matrix.LookAtLH(new Vector3(100f,100f,100f), lightConstBuff.direction, Vector3.UnitY);
             Matrix lightProjection = Matrix.OrthoLH(200, 200, 0.1f, 1000);
@@ -330,6 +329,8 @@ namespace ComputerGraphics
         }
         private void Draw()
         {
+            Viewport shadowViewport = new Viewport(0, 0, 512, 512, 0.0f, 1.0f);
+            d3dContext.Rasterizer.SetViewport(shadowViewport);
             SomeDoWithLight();
             d3dContext.OutputMerger.SetTargets(shadow.shadowDepthView, Array.Empty<RenderTargetView>());
 
@@ -346,7 +347,9 @@ namespace ComputerGraphics
             d3dContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
             d3dContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(0, 0, 0));
             d3dContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
-            
+
+            d3dContext.Rasterizer.SetViewport(viewport);
+
             d3dContext.PixelShader.SetShaderResource(1, shadow.shadowMapSRV);
             d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
 

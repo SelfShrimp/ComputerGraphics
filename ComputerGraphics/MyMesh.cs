@@ -4,12 +4,9 @@ using SharpDX;
 
 namespace ComputerGraphics
 {
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct ConstBuff
     {
-        [FieldOffset(0)]
         public Matrix transform;
-        [FieldOffset(16)]
         public Matrix worldMatrix;
     }
 
