@@ -83,9 +83,17 @@ namespace ComputerGraphics
             boundingSphere.Radius = radius * scale;
             Console.WriteLine(quaternion);
 
-            
-            game.d3dContext.PixelShader.SetSampler(1, shadowSampler);
-            game.d3dContext.PixelShader.Set(null);
+            ConstBuff constBuff = new ConstBuff();
+            Matrix matrix = Matrix.Scaling(scale) * Matrix.RotationQuaternion(quaternion) *
+                            Matrix.Translation(position);
+            constBuff.worldMatrix = matrix;
+            matrix = matrix * game.lightConstBuff.lightMatrix;
+            constBuff.transform = matrix;
+
+
+            game.d3dContext.UpdateSubresource(ref constBuff, constBuffer);
+            //game.d3dContext.PixelShader.SetSampler(1, shadowSampler);
+
         }
 
 
@@ -93,6 +101,13 @@ namespace ComputerGraphics
         {
             gameComponents.ForEach(component => { component.Draw(); });
             SetContext();
+            game.d3dContext.Draw(points.Count(), 0);
+            //game.d3dContext.DrawIndexed(indices.Count(),0, 0);
+        }
+        public virtual void DrawForLight()
+        {
+            gameComponents.ForEach(component => { component.Draw(); });
+            SetContextForLight();
             game.d3dContext.Draw(points.Count(), 0);
             //game.d3dContext.DrawIndexed(indices.Count(),0, 0);
         }
@@ -196,7 +211,7 @@ namespace ComputerGraphics
             game.d3dContext.PixelShader.SetShaderResource(0,shaderResourceView);
             //game.d3dContext.PixelShader.SetShaderResource(1, shaderResourceShadowView);
             game.d3dContext.PixelShader.SetSampler(0, sampler);
-            //game.d3dContext.PixelShader.SetSampler(1, sampler);
+            game.d3dContext.PixelShader.SetSampler(1, shadowSampler);
             game.d3dContext.PixelShader.Set(pixelShader);
             /*var dataBox = game.d3dContext.MapSubresource(vertexBuffer, 0, MapMode.WriteDiscard, SharpDX.Direct3D11.MapFlags.None);
             Utilities.Write(dataBox.DataPointer, points.ToArray(), 0, points.Count);
@@ -204,6 +219,21 @@ namespace ComputerGraphics
             
             game.d3dDevice.ImmediateContext.Rasterizer.State = rasterizerState;
             
+        }
+        protected virtual void SetContextForLight()
+        {
+            game.d3dContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<MyVertex>(), 0));
+            game.d3dContext.InputAssembler.InputLayout = layout;
+            game.d3dContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            game.d3dContext.InputAssembler.SetIndexBuffer(indexBuffer, Format.R32_UInt, 0);
+
+            game.d3dContext.VertexShader.SetConstantBuffer(0, constBuffer);
+            game.d3dContext.VertexShader.Set(vertexShader);
+
+            game.d3dContext.PixelShader.Set(null);
+
+            game.d3dDevice.ImmediateContext.Rasterizer.State = rasterizerState;
+
         }
 
         public void Dispose()

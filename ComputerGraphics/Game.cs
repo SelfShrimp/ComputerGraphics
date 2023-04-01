@@ -319,10 +319,10 @@ namespace ComputerGraphics
             lightConstBuff.ambientColor = new Vector3(0.4f, 0.4f, 0.4f);
             lightConstBuff.diffuseColor = new Vector3(0.8f, 0.8f, 0.8f);
             lightConstBuff.specularColor = new Vector3(0.4f, 0.4f, 0.4f);
-            lightConstBuff.position = new Vector3(100f, 100f, 0f);
+            lightConstBuff.position = camera.position;
             lightConstBuff.direction = new Vector3(1f, -3f, -10f);
-            Matrix lightView = Matrix.LookAtLH(new Vector3(100f,100f,100f), lightConstBuff.direction, Vector3.UnitY);
-            Matrix lightProjection = Matrix.OrthoLH(200, 200, 0.1f, 1000);
+            Matrix lightView = Matrix.LookAtRH(new Vector3(100f,100f,100f), lightConstBuff.direction + new Vector3(100f, 100f, 100f), Vector3.UnitY);
+            Matrix lightProjection = Matrix.OrthoRH(200, 200, 0.1f, 1000);
             Matrix lightViewProjection = Matrix.Multiply(lightView, lightProjection);
             lightConstBuff.lightMatrix = lightViewProjection;
             d3dContext.UpdateSubresource(ref lightConstBuff, lightConstBuffer);
@@ -340,7 +340,7 @@ namespace ComputerGraphics
             {
                 component.UpdateForLight();
                 //d3dContext.PixelShader.SetConstantBuffer(1, lightConstBuffer);
-                component.Draw();
+                component.DrawForLight();
             }
 
 

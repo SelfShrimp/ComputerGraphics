@@ -20,8 +20,8 @@ namespace ComputerGraphics.camera
 
         public void Update()
         {
-            viewMatrix = Matrix.LookAtLH(position, target, up);
-            projectionMatrix = Matrix.PerspectiveFovLH(MathUtil.PiOverFour, 1.0f, nearPlane, farPlane);
+            viewMatrix = Matrix.LookAtRH(position, target, up);
+            projectionMatrix = Matrix.PerspectiveFovRH(MathUtil.PiOverFour, 1.0f, nearPlane, farPlane);
             viewProjectionMatrix = viewMatrix * projectionMatrix;
         }   
         public void RotateAroundTarget(float angle, Vector3 axis)

@@ -73,15 +73,15 @@ float CalcShadowFactor(float4 position)
     shadowUV.y = 1 - shadowUV.y;
     float shadowDepth = shadowPos.z;
 
-    float shadowFactor = depthTexture.SampleCmpLevelZero(samplerShadow, shadowUV, shadowDepth).r;
+    float shadowFactor = depthTexture.SampleCmpLevelZero(samplerShadow, shadowUV, shadowDepth-0.002f).r;
     return shadowFactor;
 }
 
 float4 PSmain( PS_IN input ) : SV_Target
 {
    float4 color = Picture.Sample(Sampler, input.tex);
-
    float3 N = normalize(input.normal);
+   //return float4(N,0);
    float3 L = normalize(-direction);
    float3 R = reflect(L, N);
 
@@ -91,16 +91,18 @@ float4 PSmain( PS_IN input ) : SV_Target
    float diffuse = max(0.0f, dot(N, L));
    float4 diffuseColor = color * diffuse;
 
-   float3 V = light_position;
-   float shininess = 0.1f;
+   float3 V = light_position - input.shadowPos;
+   V = normalize(V);
+   float shininess = 10.0f;
    float4 SpecularColor = float4(specular_color, 0.0f);
-   float specular = pow(max(0.0f, dot(V, R)), shininess);
+   float specular = pow(max(0.0f, dot(-V, R)), shininess);
    float4 specularColor = SpecularColor * specular ;
 
-   color = ambient + diffuseColor + specularColor;
+   color = diffuseColor + specularColor;
    
    float shadowFactor = CalcShadowFactor(input.shadowPos);
    color = color * shadowFactor;
+   color += ambient;
    return color;
 }
 
